@@ -2392,4 +2392,485 @@ document.addEventListener('DOMContentLoaded', function() {
 
 console.log('🌟 Система ивентовых боссов на 10 дней загружена!');
 console.log('📅 Каждый день новый босс!');
-console.log('🗡️ Побеждай и получай ивентовое оружие!');
+console.log('🗡️ Побеждай и получай ивентовое оружие!');// ============================================
+//  ИВЕНТОВЫЕ БОССЫ - 20 ДНЕЙ (3 БОССА В ДЕНЬ)
+//  ВСТАВЬ В КОНЕЦ ФАЙЛА game.js
+// ============================================
+
+// ===== 20 ДНЕЙ × 3 БОССА (60 БОССОВ) =====
+const eventBosses20 = {};
+
+// Генерация боссов
+const bossNames = [
+    ['🔥 Огненный голем', '💧 Водяной дух', '🌪️ Ветреный титан'],
+    ['⚡ Громовой зверь', '❄️ Ледяной великан', '🌑 Теневой волк'],
+    ['☀️ Солнечный рыцарь', '🌙 Лунный страж', '⭐ Звёздный дракон'],
+    ['🐉 Древний дракон', '🦁 Царь зверей', '🦅 Небесный орёл'],
+    ['🌀 Космический змей', '🌋 Вулканический гигант', '🌊 Океанский властелин'],
+    ['⚔️ Воин света', '🛡️ Страж тьмы', '🗡️ Клинок судьбы'],
+    ['👑 Король демонов', '🧙 Архимаг', '🧛 Владыка вампиров'],
+    ['🐺 Вождь волков', '🐻 Медвежий король', '🦊 Лисьий дух'],
+    ['🌳 Древесный страж', '🗿 Каменный голем', '🪨 Земляной титан'],
+    ['☄️ Метеоритный дракон', '🌌 Звёздный странник', '🪐 Планетарный страж'],
+    ['💀 Костяной король', '🦴 Скелетный воин', '👻 Призрачный лорд'],
+    ['🔥 Феникс', '❄️ Ледяной дракон', '⚡ Молниеносный зверь'],
+    ['🌙 Лунный волк', '☀️ Солнечный орёл', '⭐ Звёздный тигр'],
+    ['🌊 Водный дракон', '🌋 Огненный титан', '🌪️ Ветреный страж'],
+    ['🛡️ Святой паладин', '⚔️ Тёмный рыцарь', '🗡️ Клинок правосудия'],
+    ['👾 Космический захватчик', '🚀 Звёздный десантник', '🌌 Вселенский страж'],
+    ['🧟 Король зомби', '🧛 Ночной вампир', '👹 Демонический лорд'],
+    ['🐲 Император драконов', '🦄 Единорог-воин', '🐉 Дракон тьмы'],
+    ['⚡ Бог грома', '🌊 Бог моря', '🔥 Бог огня'],
+    ['👑 Император вселенной', '⭐ Космический бог', '♾️ Бесконечный страж']
+];
+
+const bossIcons = [
+    ['🔥','💧','🌪️'],
+    ['⚡','❄️','🌑'],
+    ['☀️','🌙','⭐'],
+    ['🐉','🦁','🦅'],
+    ['🌀','🌋','🌊'],
+    ['⚔️','🛡️','🗡️'],
+    ['👑','🧙','🧛'],
+    ['🐺','🐻','🦊'],
+    ['🌳','🗿','🪨'],
+    ['☄️','🌌','🪐'],
+    ['💀','🦴','👻'],
+    ['🔥','❄️','⚡'],
+    ['🌙','☀️','⭐'],
+    ['🌊','🌋','🌪️'],
+    ['🛡️','⚔️','🗡️'],
+    ['👾','🚀','🌌'],
+    ['🧟','🧛','👹'],
+    ['🐲','🦄','🐉'],
+    ['⚡','🌊','🔥'],
+    ['👑','⭐','♾️']
+];
+
+// Создаём боссов
+for (let day = 1; day <= 20; day++) {
+    let dayIndex = day - 1;
+    let dayBosses = [];
+    
+    // Определяем HP в зависимости от дня
+    let baseHP = 20000 + day * 2000;
+    let basePower = 40 + day * 3;
+    let baseDefense = 10 + Math.floor(day / 2);
+    let baseReward = 500 + day * 50;
+    let baseExp = 300 + day * 30;
+    let minLevel = Math.max(1, Math.floor(day / 2));
+    
+    for (let b = 0; b < 3; b++) {
+        let bossNum = b + 1;
+        let hp = baseHP + b * 5000;
+        let power = basePower + b * 5;
+        let defense = baseDefense + b * 2;
+        let reward = baseReward + b * 100;
+        let exp = baseExp + b * 50;
+        let minLvl = minLevel + b;
+        
+        let key = day + '_' + bossNum;
+        eventBosses20[key] = {
+            name: bossNames[dayIndex][b] || 'Босс ' + day + '-' + bossNum,
+            hp: hp,
+            power: power,
+            defense: defense,
+            reward: reward,
+            exp: exp,
+            icon: bossIcons[dayIndex][b] || '👾',
+            day: day,
+            bossNum: bossNum,
+            minLevel: minLvl
+        };
+    }
+}
+
+// ===== ИВЕНТОВОЕ ОРУЖИЕ (20 ШТУК) =====
+const eventWeapons20 = {};
+const weaponNames = [
+    '🔥 Пламенный клинок', '💧 Водяной меч', '🌪️ Ветреный кинжал',
+    '⚡ Громовой топор', '❄️ Ледяной посох', '🌑 Теневой клинок',
+    '☀️ Солнечный меч', '🌙 Лунный кинжал', '⭐ Звёздный посох',
+    '🐉 Драконий клинок', '🦁 Коготь зверя', '🦅 Крыло орла',
+    '🌀 Космический клинок', '🌋 Вулканический меч', '🌊 Трезубец океана',
+    '⚔️ Клинок света', '🛡️ Щит тьмы', '🗡️ Клинок судьбы',
+    '👑 Императорский меч', '⭐ Звёздный клинок'
+];
+
+for (let i = 0; i < 20; i++) {
+    let day = i + 1;
+    let damage = 30 + i * 3;
+    let icon = bossIcons[i] ? bossIcons[i][0] : '⭐';
+    eventWeapons20[day] = {
+        id: 'ew20_' + day,
+        name: weaponNames[i] || 'Оружие ' + day,
+        damage: damage,
+        icon: icon,
+        day: day
+    };
+}
+
+// ===== СОСТОЯНИЕ ИВЕНТА =====
+if (!game.eventBossSystem20) {
+    game.eventBossSystem20 = {
+        defeated: {},
+        weaponsCollected: [],
+        lastCheck: Date.now()
+    };
+}
+
+// ===== ФУНКЦИИ =====
+function getCurrentEventDay20() {
+    let now = new Date();
+    let startDate = new Date(2024, 0, 1);
+    let diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    let day = (diffDays % 20) + 1;
+    return day;
+}
+
+function getBossesForDay(day) {
+    let result = [];
+    for (let b = 1; b <= 3; b++) {
+        let key = day + '_' + b;
+        if (eventBosses20[key]) {
+            result.push(eventBosses20[key]);
+        }
+    }
+    return result;
+}
+
+function showEventBosses20() {
+    backToMenu();
+    let eventDiv = document.getElementById('eventBosses20');
+    if (!eventDiv) {
+        let app = document.getElementById('app');
+        let newDiv = document.createElement('div');
+        newDiv.id = 'eventBosses20';
+        newDiv.style.display = 'none';
+        newDiv.innerHTML = `
+            <h2>🌟 ИВЕНТ - 20 ДНЕЙ</h2>
+            <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin:10px 0;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;">
+                    <span>📅 День: <span id="eventDay20" style="color:#ffd93d;">1</span>/20</span>
+                    <span>🏆 Побеждено: <span id="eventDefeated20" style="color:#51cf66;">0</span>/60</span>
+                </div>
+                <div style="font-size:11px;opacity:0.7;margin-top:5px;">
+                    ⚔️ 3 босса каждый день! Побеждай и получай ивентовое оружие!
+                </div>
+            </div>
+            <div id="eventBossList20"></div>
+            <button class="back" onclick="backToMenu()">🔙 Назад</button>
+        `;
+        app.appendChild(newDiv);
+        eventDiv = document.getElementById('eventBosses20');
+    }
+    eventDiv.style.display = 'block';
+    renderEventBosses20();
+}
+
+function renderEventBosses20() {
+    let container = document.getElementById('eventBossList20');
+    container.innerHTML = '';
+    
+    let currentDay = getCurrentEventDay20();
+    document.getElementById('eventDay20').textContent = currentDay;
+    
+    let defeatedCount = Object.keys(game.eventBossSystem20.defeated).length;
+    document.getElementById('eventDefeated20').textContent = defeatedCount;
+    
+    // Показываем только текущий день + прошлые дни
+    for (let day = 1; day <= currentDay; day++) {
+        let bosses = getBossesForDay(day);
+        if (bosses.length === 0) continue;
+        
+        // Заголовок дня
+        let dayTitle = document.createElement('div');
+        dayTitle.style.cssText = `
+            font-weight: bold;
+            color: ${day === currentDay ? '#ffd93d' : '#a29bfe'};
+            margin: 10px 0 5px 0;
+            font-size: 14px;
+            background: rgba(255,255,255,0.03);
+            padding: 5px 10px;
+            border-radius: 6px;
+        `;
+        dayTitle.textContent = `📅 День ${day} ${day === currentDay ? '(СЕГОДНЯ)' : ''}`;
+        container.appendChild(dayTitle);
+        
+        // Боссы дня
+        bosses.forEach(boss => {
+            let key = day + '_' + boss.bossNum;
+            let isDefeated = game.eventBossSystem20.defeated[key] || false;
+            let isAvailable = day <= currentDay;
+            let weapon = eventWeapons20[day];
+            let weaponCollected = game.eventBossSystem20.weaponsCollected.includes(day);
+            let isCurrent = day === currentDay;
+            
+            let div = document.createElement('div');
+            div.style.cssText = `
+                background: ${isDefeated ? 'rgba(0,184,148,0.1)' : isCurrent ? 'rgba(255,217,61,0.15)' : 'rgba(255,255,255,0.03)'};
+                border: ${isCurrent ? '2px solid #ffd93d' : isDefeated ? '1px solid #00b894' : '1px solid transparent'};
+                border-radius: 8px;
+                padding: 10px 12px;
+                margin: 4px 0;
+                opacity: ${isAvailable ? 1 : 0.4};
+            `;
+            
+            let statusText = '';
+            let btnHtml = '';
+            
+            if (isDefeated) {
+                statusText = '✅ Побеждён!';
+                if (!weaponCollected && weapon && day === currentDay) {
+                    btnHtml = `<button class="gold" onclick="claimEventWeapon20(${day})" style="margin-top:4px;padding:4px 10px;font-size:11px;">🎁 Забрать оружие</button>`;
+                } else if (weaponCollected) {
+                    statusText += ' 🗡️';
+                }
+            } else if (isAvailable) {
+                if (game.p.lvl >= boss.minLevel) {
+                    statusText = '⚔️ Доступен!';
+                    btnHtml = `<button class="g" onclick="startEventBoss20('${key}')" style="margin-top:4px;padding:4px 10px;font-size:11px;">⚔️ Сразиться</button>`;
+                } else {
+                    statusText = '🔒 ' + boss.minLevel + ' ур.';
+                }
+            } else {
+                statusText = '🔒 Заблокирован';
+            }
+            
+            div.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <span style="font-size:20px;">${boss.icon}</span>
+                        <span style="font-weight:bold;font-size:13px;">${boss.name}</span>
+                        <span style="font-size:10px;opacity:0.6;display:block;">
+                            ❤️ ${boss.hp} | 💪 ${boss.power} | 🛡️ ${boss.defense}
+                        </span>
+                    </div>
+                    <div style="font-size:11px;text-align:right;">
+                        <div style="color:${isDefeated ? '#51cf66' : isCurrent ? '#ffd93d' : '#666'};">${statusText}</div>
+                        <div style="font-size:10px;opacity:0.6;">🎁 ${boss.reward}🪙 ${boss.exp}⭐</div>
+                        ${btnHtml}
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+}
+
+function startEventBoss20(key) {
+    let boss = eventBosses20[key];
+    if (!boss) return;
+    if (game.p.lvl < boss.minLevel) {
+        alert('🔒 Нужен ' + boss.minLevel + ' уровень!');
+        return;
+    }
+    if (game.eventBossSystem20.defeated[key]) {
+        alert('✅ Этот босс уже побеждён!');
+        return;
+    }
+    
+    let eventEnemy = {
+        n: '🌟 ' + boss.name + ' (ИВЕНТ)',
+        h: boss.hp,
+        pw: boss.power,
+        d: boss.defense,
+        r: boss.reward,
+        exp: boss.exp,
+        b: true,
+        ic: boss.icon,
+        isEvent: true,
+        day: boss.day,
+        bossKey: key
+    };
+    
+    game.en = eventEnemy;
+    game.eh = eventEnemy.h;
+    game.fg = true;
+    game.p.h = game.p.mh;
+    game.p.e = game.p.me;
+    game.isEventBoss = true;
+
+    document.getElementById('ch').textContent = 'ИВЕНТ ' + boss.day + '-' + boss.bossNum;
+    document.getElementById('lvl').textContent = game.p.lvl;
+    document.getElementById('gc').textContent = game.p.c;
+    document.getElementById('bossEmoji').textContent = boss.icon;
+    document.getElementById('enemyName').textContent = '🌟 ' + boss.name + ' (ИВЕНТ)';
+    document.getElementById('log').innerHTML = '';
+    addLog('🌟 ИВЕНТ: Бой с ' + boss.icon + ' ' + boss.name + '!');
+    addLog('💪 Сила: ' + boss.power + ' | 🛡️ Защита: ' + boss.defense);
+    addLog('📅 День ' + boss.day + ' | Босс ' + boss.bossNum + '/3');
+    
+    backToMenu();
+    document.getElementById('game').style.display = 'block';
+    updateHealth();
+
+    document.getElementById('ctrl').innerHTML = `
+        <button class="g" onclick="attackEventBoss20()">🗡️ Атака</button>
+        <button class="r" onclick="defendEventBoss20()">🛡️ Защита</button>
+    `;
+}
+
+function attackEventBoss20() {
+    if (!game.fg) return;
+    let w = getWeapon();
+    let dmg = (w.d + Math.floor(game.p.pw * 0.6)) * 1.2;
+    dmg = Math.floor(dmg * (0.75 + Math.random() * 0.5));
+    dmg = Math.max(1, dmg - Math.floor(game.en.d * 0.2));
+    if (Math.random() < 0.15) {
+        dmg = Math.floor(dmg * 1.8);
+        addLog('💥 КРИТ!');
+    }
+    game.eh = Math.max(0, game.eh - dmg);
+    game.p.e = Math.max(0, game.p.e - 8);
+
+    addLog('🎯 ' + w.ic + ' ' + w.n + ' → ' + dmg + ' урона');
+    updateHealth();
+    if (game.eh <= 0) { eventBossVictory20(); return; }
+    setTimeout(enemyTurnEventBoss20, 500);
+}
+
+function enemyTurnEventBoss20() {
+    if (!game.fg) return;
+    let dmg = Math.floor(game.en.pw * (0.5 + Math.random() * 0.6));
+    dmg = Math.max(1, dmg - Math.floor(game.p.def * 0.3));
+    if (Math.random() < 0.2) {
+        dmg = Math.floor(dmg * 1.5);
+        addLog('💢 Босс использует суперудар!');
+    }
+    game.p.h = Math.max(0, game.p.h - dmg);
+
+    addLog('💢 ' + game.en.ic + ' ' + game.en.n + ' → ' + dmg + ' урона');
+    updateHealth();
+    if (game.p.h <= 0) { eventBossDefeat20(); return; }
+    game.p.e = Math.min(game.p.me, game.p.e + 5);
+    updateHealth();
+    addLog('🔄 Ваш ход!');
+}
+
+function defendEventBoss20() {
+    if (!game.fg) return;
+    let heal = Math.floor(15 + Math.random() * 20);
+    if (game.p.potion > 0) {
+        heal += 20;
+        game.p.potion--;
+        addLog('💊 Использовано зелье!');
+    }
+    game.p.h = Math.min(game.p.mh, game.p.h + heal);
+    addLog('🛡️ Защита +' + heal + ' HP');
+    updateHealth();
+    setTimeout(() => {
+        let dmg = Math.floor(game.en.pw * 0.25);
+        dmg = Math.max(1, dmg - Math.floor(game.p.def * 0.2));
+        game.p.h = Math.max(0, game.p.h - dmg);
+        addLog('💢 ' + game.en.ic + ' ' + game.en.n + ' → ' + dmg + ' урона (ослаб)');
+        updateHealth();
+        if (game.p.h <= 0) { eventBossDefeat20(); } else { addLog('🔄 Ваш ход!'); }
+    }, 500);
+}
+
+function eventBossVictory20() {
+    game.fg = false;
+    let key = game.en.bossKey;
+    let boss = eventBosses20[key];
+    let day = game.en.day;
+    
+    game.p.w++;
+    game.p.t++;
+    game.p.c += boss.reward;
+    let xp = boss.exp;
+    addXP(xp);
+    
+    game.eventBossSystem20.defeated[key] = true;
+    
+    addLog('🎉 ИВЕНТ: ' + boss.icon + ' ' + boss.name + ' побеждён! +' + boss.reward + '🪙 +' + xp + '⭐');
+    
+    // Проверяем, убиты ли все 3 босса дня
+    let dayBosses = getBossesForDay(day);
+    let allDefeated = dayBosses.every(b => game.eventBossSystem20.defeated[day + '_' + b.bossNum]);
+    
+    if (allDefeated && !game.eventBossSystem20.weaponsCollected.includes(day)) {
+        let weapon = eventWeapons20[day];
+        if (weapon) {
+            addLog('🗡️ Все боссы дня побеждены! Получено оружие: ' + weapon.icon + ' ' + weapon.name);
+            alert('🎉 Все 3 босса дня побеждены!\n🗡️ Получено оружие: ' + weapon.icon + ' ' + weapon.name + ' (+' + weapon.damage + ' урона)');
+            claimEventWeapon20(day);
+        }
+    }
+    
+    save();
+    updateUI();
+    
+    setTimeout(() => {
+        document.getElementById('ctrl').innerHTML = `
+            <button class="gold" onclick="showEventBosses20()" style="grid-column:span 2;">🌟 Вернуться к ивентам</button>
+            <button class="back" onclick="backToMenu()" style="grid-column:span 2;">🔙 В меню</button>
+        `;
+    }, 800);
+}
+
+function eventBossDefeat20() {
+    game.fg = false;
+    game.p.l++;
+    game.p.t++;
+    addLog('💀 Поражение от ивентового босса...');
+    save();
+    setTimeout(() => {
+        document.getElementById('ctrl').innerHTML = `
+            <button class="r" onclick="startEventBoss20('${game.en.bossKey}')" style="grid-column:span 2;">🔄 Попробовать снова</button>
+            <button class="back" onclick="backToMenu()" style="grid-column:span 2;">🔙 В меню</button>
+        `;
+    }, 800);
+}
+
+function claimEventWeapon20(day) {
+    if (game.eventBossSystem20.weaponsCollected.includes(day)) {
+        return;
+    }
+    
+    let weapon = eventWeapons20[day];
+    if (!weapon) return;
+    
+    let newWeapon = {
+        id: weapon.id,
+        n: weapon.name,
+        d: weapon.damage,
+        pr: 0,
+        ic: weapon.icon,
+        lvl: game.p.lvl,
+        isEvent: true
+    };
+    
+    game.p.wp.push({ ...newWeapon, eq: false });
+    game.eventBossSystem20.weaponsCollected.push(day);
+    
+    addLog('🗡️ Получено ивентовое оружие: ' + weapon.icon + ' ' + weapon.name);
+    save();
+    updateUI();
+}
+
+// ===== ДОБАВЛЯЕМ КНОПКУ В МЕНЮ =====
+document.addEventListener('DOMContentLoaded', function() {
+    let menu = document.getElementById('menu');
+    if (menu) {
+        let existing = document.getElementById('eventBossBtn20');
+        if (!existing) {
+            let btn = document.createElement('button');
+            btn.id = 'eventBossBtn20';
+            btn.className = 'event-btn';
+            btn.textContent = '🌟 Ивент 20 дней';
+            btn.onclick = showEventBosses20;
+            
+            let passBtn = document.getElementById('gamePassBtn');
+            if (passBtn) {
+                menu.insertBefore(btn, passBtn);
+            } else {
+                menu.appendChild(btn);
+            }
+        }
+    }
+});
+
+console.log('🌟 Ивент на 20 дней загружен!');
+console.log('⚔️ 3 босса каждый день (всего 60 боссов)!');
+console.log('🗡️ 20 видов ивентового оружия!');
