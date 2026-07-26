@@ -2955,3 +2955,254 @@ document.addEventListener('DOMContentLoaded', function() {
 
 console.log('🔄 Система обновлений загружена! Версия: ' + GAME_VERSION);
 console.log('📅 Дата обновления: ' + UPDATE_DATE);
+// ============================================
+//  МАГАЗИН ИВЕНТОВОГО ОРУЖИЯ
+//  ВСТАВЬ В КОНЕЦ ФАЙЛА game.js
+// ============================================
+
+// ===== ДАННЫЕ МАГАЗИНА =====
+const eventShopWeapons = {
+    1: { id: 'es1', name: '🔥 Пламенный клинок', damage: 45, price: 500, icon: '🔥', day: 1 },
+    2: { id: 'es2', name: '💧 Водяной меч', damage: 48, price: 800, icon: '💧', day: 2 },
+    3: { id: 'es3', name: '🌪️ Ветреный кинжал', damage: 50, price: 1000, icon: '🌪️', day: 3 },
+    4: { id: 'es4', name: '⚡ Громовой топор', damage: 55, price: 1200, icon: '⚡', day: 4 },
+    5: { id: 'es5', name: '❄️ Ледяной посох', damage: 58, price: 1500, icon: '❄️', day: 5 },
+    6: { id: 'es6', name: '🌑 Теневой клинок', damage: 60, price: 1800, icon: '🌑', day: 6 },
+    7: { id: 'es7', name: '☀️ Солнечный меч', damage: 65, price: 2000, icon: '☀️', day: 7 },
+    8: { id: 'es8', name: '🌙 Лунный кинжал', damage: 68, price: 2200, icon: '🌙', day: 8 },
+    9: { id: 'es9', name: '⭐ Звёздный посох', damage: 72, price: 2500, icon: '⭐', day: 9 },
+    10: { id: 'es10', name: '🐉 Драконий клинок', damage: 78, price: 2800, icon: '🐉', day: 10 },
+    11: { id: 'es11', name: '🦁 Коготь зверя', damage: 80, price: 3000, icon: '🦁', day: 11 },
+    12: { id: 'es12', name: '🦅 Крыло орла', damage: 85, price: 3200, icon: '🦅', day: 12 },
+    13: { id: 'es13', name: '🌀 Космический клинок', damage: 88, price: 3500, icon: '🌀', day: 13 },
+    14: { id: 'es14', name: '🌋 Вулканический меч', damage: 92, price: 3800, icon: '🌋', day: 14 },
+    15: { id: 'es15', name: '🌊 Трезубец океана', damage: 95, price: 4000, icon: '🌊', day: 15 },
+    16: { id: 'es16', name: '⚔️ Клинок света', damage: 100, price: 4200, icon: '⚔️', day: 16 },
+    17: { id: 'es17', name: '🛡️ Щит тьмы', damage: 105, price: 4500, icon: '🛡️', day: 17 },
+    18: { id: 'es18', name: '🗡️ Клинок судьбы', damage: 110, price: 4700, icon: '🗡️', day: 18 },
+    19: { id: 'es19', name: '👑 Императорский меч', damage: 120, price: 4900, icon: '👑', day: 19 },
+    20: { id: 'es20', name: '⭐ Звёздный клинок', damage: 130, price: 5000, icon: '⭐', day: 20 }
+};
+
+// ===== СОСТОЯНИЕ МАГАЗИНА =====
+if (!game.eventShop) {
+    game.eventShop = {
+        purchased: [],
+        available: true
+    };
+}
+
+// ===== ПРОВЕРКА ИВЕНТА =====
+function isEventActive() {
+    // Ивент активен всегда (цикл 20 дней)
+    return true;
+}
+
+function getEventDay() {
+    let now = new Date();
+    let startDate = new Date(2024, 0, 1);
+    let diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    return (diffDays % 20) + 1;
+}
+
+// ===== ФУНКЦИЯ МАГАЗИНА =====
+function showEventShop() {
+    backToMenu();
+    let shopDiv = document.getElementById('eventShop');
+    if (!shopDiv) {
+        let app = document.getElementById('app');
+        let newDiv = document.createElement('div');
+        newDiv.id = 'eventShop';
+        newDiv.style.display = 'none';
+        newDiv.innerHTML = `
+            <h2>🏪 ИВЕНТОВЫЙ МАГАЗИН</h2>
+            <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin:10px 0;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;">
+                    <span>📅 День: <span id="shopEventDay" style="color:#ffd93d;">1</span>/20</span>
+                    <span>🪙 Монет: <span id="shopCoins" style="color:#ffd93d;">0</span></span>
+                </div>
+                <div style="font-size:11px;opacity:0.7;margin-top:5px;">
+                    ⚠️ Оружие исчезнет после окончания ивента!
+                </div>
+            </div>
+            <div id="eventShopList"></div>
+            <button class="back" onclick="backToMenu()">🔙 Назад</button>
+        `;
+        app.appendChild(newDiv);
+        shopDiv = document.getElementById('eventShop');
+    }
+    shopDiv.style.display = 'block';
+    renderEventShop();
+}
+
+function renderEventShop() {
+    let container = document.getElementById('eventShopList');
+    container.innerHTML = '';
+    
+    let currentDay = getEventDay();
+    document.getElementById('shopEventDay').textContent = currentDay;
+    document.getElementById('shopCoins').textContent = game.p.c;
+    
+    Object.keys(eventShopWeapons).forEach(key => {
+        let weapon = eventShopWeapons[key];
+        let isPurchased = game.eventShop.purchased.includes(weapon.id);
+        let isAvailable = weapon.day <= currentDay;
+        let canAfford = game.p.c >= weapon.price;
+        
+        let div = document.createElement('div');
+        div.style.cssText = `
+            background: ${isPurchased ? 'rgba(0,184,148,0.1)' : 'rgba(255,255,255,0.03)'};
+            border: ${isPurchased ? '1px solid #00b894' : '1px solid transparent'};
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin: 4px 0;
+            opacity: ${isAvailable ? 1 : 0.4};
+        `;
+        
+        let statusText = '';
+        let btnHtml = '';
+        
+        if (isPurchased) {
+            statusText = '✅ Куплено';
+        } else if (!isAvailable) {
+            statusText = '🔒 День ' + weapon.day;
+        } else if (canAfford) {
+            statusText = '🪙 ' + weapon.price;
+            btnHtml = `<button class="gold" onclick="buyEventWeapon(${key})" style="margin-top:4px;padding:4px 10px;font-size:11px;">Купить</button>`;
+        } else {
+            statusText = '💰 Нет монет';
+        }
+        
+        div.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <span style="font-size:20px;">${weapon.icon}</span>
+                    <span style="font-weight:bold;font-size:13px;">${weapon.name}</span>
+                    <span style="font-size:10px;opacity:0.6;display:block;">
+                        ⚔️ Урон: ${weapon.damage} | 📅 День ${weapon.day}
+                    </span>
+                </div>
+                <div style="font-size:12px;text-align:right;">
+                    <div style="color:${isPurchased ? '#51cf66' : canAfford ? '#ffd93d' : '#666'};">${statusText}</div>
+                    ${btnHtml}
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+// ===== ПОКУПКА ОРУЖИЯ =====
+function buyEventWeapon(key) {
+    let weapon = eventShopWeapons[key];
+    if (!weapon) return;
+    
+    if (game.eventShop.purchased.includes(weapon.id)) {
+        alert('✅ Это оружие уже куплено!');
+        return;
+    }
+    
+    let currentDay = getEventDay();
+    if (weapon.day > currentDay) {
+        alert('🔒 Это оружие откроется на ' + weapon.day + ' день!');
+        return;
+    }
+    
+    if (game.p.c < weapon.price) {
+        alert('💰 Недостаточно монет! Нужно ' + weapon.price + '🪙');
+        return;
+    }
+    
+    // Покупка
+    game.p.c -= weapon.price;
+    game.eventShop.purchased.push(weapon.id);
+    
+    // Добавляем оружие игроку
+    let newWeapon = {
+        id: weapon.id,
+        n: weapon.name + ' (ИВЕНТ)',
+        d: weapon.damage,
+        pr: 0,
+        ic: weapon.icon,
+        lvl: game.p.lvl,
+        isEvent: true,
+        eventDay: weapon.day
+    };
+    
+    game.p.wp.push({ ...newWeapon, eq: false });
+    
+    addLog('🛒 Куплено ивентовое оружие: ' + weapon.icon + ' ' + weapon.name + ' (' + weapon.damage + ' урона)');
+    alert('🛒 Куплено: ' + weapon.icon + ' ' + weapon.name + '\n⚔️ Урон: ' + weapon.damage + '\n🪙 Цена: ' + weapon.price);
+    
+    save();
+    updateUI();
+    renderEventShop();
+    document.getElementById('shopCoins').textContent = game.p.c;
+}
+
+// ===== ПРОВЕРКА И УДАЛЕНИЕ ОРУЖИЯ ПОСЛЕ ИВЕНТА =====
+function checkEventWeapons() {
+    // Ивент всегда активен (цикл 20 дней)
+    // Если хотите удалять оружие после 20 дней - раскомментируйте код ниже
+    
+    /*
+    let currentDay = getEventDay();
+    let allDaysPassed = false; // Проверка, прошло ли 20 дней
+    
+    // Если прошло больше 20 дней с начала
+    let now = new Date();
+    let startDate = new Date(2024, 0, 1);
+    let diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    if (diffDays > 20) {
+        allDaysPassed = true;
+    }
+    
+    if (allDaysPassed) {
+        // Удаляем ивентовое оружие у игрока
+        let removed = 0;
+        game.p.wp = game.p.wp.filter(w => {
+            if (w.isEvent) {
+                removed++;
+                return false;
+            }
+            return true;
+        });
+        
+        if (removed > 0) {
+            addLog('🗑️ Ивент закончился! Удалено ' + removed + ' ивентовых оружий');
+            game.eventShop.purchased = [];
+            save();
+            updateUI();
+        }
+    }
+    */
+}
+
+// ===== ДОБАВЛЯЕМ КНОПКУ В МЕНЮ =====
+document.addEventListener('DOMContentLoaded', function() {
+    let menu = document.getElementById('menu');
+    if (menu) {
+        let existing = document.getElementById('eventShopBtn');
+        if (!existing) {
+            let btn = document.createElement('button');
+            btn.id = 'eventShopBtn';
+            btn.className = 'o';
+            btn.textContent = '🏪 Ивент-магазин';
+            btn.onclick = showEventShop;
+            
+            let eventBtn = document.getElementById('eventBossBtn20');
+            if (eventBtn) {
+                menu.insertBefore(btn, eventBtn);
+            } else {
+                menu.appendChild(btn);
+            }
+        }
+    }
+    
+    // Проверяем ивент при загрузке (раскомментировать если нужно)
+    // checkEventWeapons();
+});
+
+console.log('🏪 Ивентовый магазин загружен!');
+console.log('📅 20 видов оружия с ценами от 0 до 5000 монет');
+console.log('⚠️ Оружие исчезнет после окончания ивента!');
