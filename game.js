@@ -1439,5 +1439,481 @@ if (!localStorage.getItem('gd')) {
     game.p.giftClaimed = true;
     save();
     updateUI();
-    console.log('🎉 Новый игрок получил 10 уровень!');
+    console.log('🎉 Новый игрок получил 10 уровень!');// ============================================
+//  ИВЕНТОВЫЕ БОССЫ НА 10 ДНЕЙ
+//  ВСТАВЬ В КОНЕЦ ФАЙЛА game.js
+// ============================================
+
+// ===== ДАННЫЕ ИВЕНТОВЫХ БОССОВ =====
+const eventBosses = {
+    1: {
+        name: '🔥 Огненный титан',
+        hp: 50000,
+        power: 80,
+        defense: 20,
+        reward: 1500,
+        exp: 800,
+        icon: '🔥',
+        minLevel: 5,
+        day: 1
+    },
+    2: {
+        name: '❄️ Ледяной дракон',
+        hp: 50000,
+        power: 85,
+        defense: 25,
+        reward: 1600,
+        exp: 850,
+        icon: '❄️',
+        minLevel: 5,
+        day: 2
+    },
+    3: {
+        name: '⚡ Громовой великан',
+        hp: 100000,
+        power: 120,
+        defense: 35,
+        reward: 2500,
+        exp: 1500,
+        icon: '⚡',
+        minLevel: 10,
+        day: 3
+    },
+    4: {
+        name: '🌑 Теневой властелин',
+        hp: 50000,
+        power: 90,
+        defense: 30,
+        reward: 1700,
+        exp: 900,
+        icon: '🌑',
+        minLevel: 5,
+        day: 4
+    },
+    5: {
+        name: '🌟 Космический страж',
+        hp: 100000,
+        power: 130,
+        defense: 40,
+        reward: 2600,
+        exp: 1600,
+        icon: '🌟',
+        minLevel: 10,
+        day: 5
+    },
+    6: {
+        name: '💀 Повелитель смерти',
+        hp: 50000,
+        power: 95,
+        defense: 35,
+        reward: 1800,
+        exp: 950,
+        icon: '💀',
+        minLevel: 5,
+        day: 6
+    },
+    7: {
+        name: '🐉 Древний дракон',
+        hp: 100000,
+        power: 140,
+        defense: 45,
+        reward: 2700,
+        exp: 1700,
+        icon: '🐉',
+        minLevel: 10,
+        day: 7
+    },
+    8: {
+        name: '👿 Князь тьмы',
+        hp: 50000,
+        power: 100,
+        defense: 40,
+        reward: 1900,
+        exp: 1000,
+        icon: '👿',
+        minLevel: 5,
+        day: 8
+    },
+    9: {
+        name: '⚔️ Бог войны',
+        hp: 100000,
+        power: 150,
+        defense: 50,
+        reward: 3000,
+        exp: 2000,
+        icon: '⚔️',
+        minLevel: 10,
+        day: 9
+    },
+    10: {
+        name: '👑 Император тьмы',
+        hp: 100000,
+        power: 160,
+        defense: 55,
+        reward: 3500,
+        exp: 2500,
+        icon: '👑',
+        minLevel: 10,
+        day: 10
+    }
+};
+
+// ===== ИВЕНТОВОЕ ОРУЖИЕ =====
+const eventWeapons = {
+    1: { id: 'ew1', name: '🔥 Пламенный клинок', damage: 45, icon: '🔥', day: 1 },
+    2: { id: 'ew2', name: '❄️ Ледяной меч', damage: 48, icon: '❄️', day: 2 },
+    3: { id: 'ew3', name: '⚡ Громовой топор', damage: 55, icon: '⚡', day: 3 },
+    4: { id: 'ew4', name: '🌑 Теневой кинжал', damage: 50, icon: '🌑', day: 4 },
+    5: { id: 'ew5', name: '🌟 Космический посох', damage: 60, icon: '🌟', day: 5 },
+    6: { id: 'ew6', name: '💀 Кость смерти', damage: 52, icon: '💀', day: 6 },
+    7: { id: 'ew7', name: '🐉 Драконий клинок', damage: 65, icon: '🐉', day: 7 },
+    8: { id: 'ew8', name: '👿 Тёмный клинок', damage: 55, icon: '👿', day: 8 },
+    9: { id: 'ew9', name: '⚔️ Божественный меч', damage: 70, icon: '⚔️', day: 9 },
+    10: { id: 'ew10', name: '👑 Императорский клинок', damage: 80, icon: '👑', day: 10 }
+};
+
+// ===== СОСТОЯНИЕ ИВЕНТА =====
+if (!game.eventBossSystem) {
+    game.eventBossSystem = {
+        currentDay: 1,
+        defeated: {},
+        weaponsCollected: [],
+        lastCheck: Date.now()
+    };
+}
+
+// ===== ФУНКЦИИ ИВЕНТА =====
+function getCurrentEventDay() {
+    let now = new Date();
+    let startDate = new Date(2024, 0, 1); // Начало отсчёта
+    let diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    let day = (diffDays % 10) + 1;
+    return day;
+}
+
+function getCurrentEventBoss() {
+    let day = getCurrentEventDay();
+    return eventBosses[day];
+}
+
+function getEventWeapon(day) {
+    return eventWeapons[day];
+}
+
+function showEventBosses() {
+    backToMenu();
+    let eventDiv = document.getElementById('eventBosses');
+    if (!eventDiv) {
+        let app = document.getElementById('app');
+        let newDiv = document.createElement('div');
+        newDiv.id = 'eventBosses';
+        newDiv.style.display = 'none';
+        newDiv.innerHTML = `
+            <h2>🌟 ИВЕНТОВЫЕ БОССЫ</h2>
+            <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin:10px 0;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;">
+                    <span>📅 День: <span id="eventDay" style="color:#ffd93d;">1</span>/10</span>
+                    <span>🏆 Побеждено: <span id="eventDefeated" style="color:#51cf66;">0</span>/10</span>
+                </div>
+                <div style="font-size:11px;opacity:0.7;margin-top:5px;">
+                    🎯 Каждый день новый босс! Побеждай и получай ивентовое оружие!
+                </div>
+            </div>
+            <div id="eventBossList"></div>
+            <button class="back" onclick="backToMenu()">🔙 Назад</button>
+        `;
+        app.appendChild(newDiv);
+        eventDiv = document.getElementById('eventBosses');
+    }
+    eventDiv.style.display = 'block';
+    renderEventBosses();
+}
+
+function renderEventBosses() {
+    let container = document.getElementById('eventBossList');
+    container.innerHTML = '';
+    
+    let currentDay = getCurrentEventDay();
+    document.getElementById('eventDay').textContent = currentDay;
+    
+    let defeatedCount = Object.keys(game.eventBossSystem.defeated).length;
+    document.getElementById('eventDefeated').textContent = defeatedCount;
+    
+    Object.keys(eventBosses).forEach(key => {
+        let boss = eventBosses[key];
+        let day = parseInt(key);
+        let isDefeated = game.eventBossSystem.defeated[day] || false;
+        let isAvailable = day <= currentDay;
+        let isCurrent = day === currentDay;
+        let weapon = getEventWeapon(day);
+        let weaponCollected = game.eventBossSystem.weaponsCollected.includes(day);
+        
+        let div = document.createElement('div');
+        div.style.cssText = `
+            background: ${isDefeated ? 'rgba(0,184,148,0.1)' : isCurrent ? 'rgba(255,217,61,0.15)' : 'rgba(255,255,255,0.03)'};
+            border: ${isCurrent ? '2px solid #ffd93d' : isDefeated ? '1px solid #00b894' : '1px solid transparent'};
+            border-radius: 10px;
+            padding: 12px;
+            margin: 6px 0;
+            opacity: ${isAvailable ? 1 : 0.4};
+        `;
+        
+        let statusText = '';
+        let btnHtml = '';
+        
+        if (isDefeated) {
+            statusText = '✅ Побеждён!';
+            if (!weaponCollected && weapon) {
+                btnHtml = `<button class="gold" onclick="claimEventWeapon(${day})" style="margin-top:5px;padding:6px;font-size:12px;">🎁 Забрать оружие</button>`;
+            } else if (weaponCollected) {
+                statusText += ' 🗡️ Оружие получено!';
+            }
+        } else if (isCurrent && isAvailable) {
+            if (game.p.lvl >= boss.minLevel) {
+                statusText = '⚔️ Доступен!';
+                btnHtml = `<button class="g" onclick="startEventBoss(${day})" style="margin-top:5px;padding:6px;font-size:12px;">⚔️ Сразиться</button>`;
+            } else {
+                statusText = '🔒 Нужен ' + boss.minLevel + ' уровень';
+            }
+        } else if (isAvailable) {
+            statusText = '📅 Будет позже...';
+        } else {
+            statusText = '🔒 Заблокирован';
+        }
+        
+        div.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <span style="font-size:24px;">${boss.icon}</span>
+                    <span style="font-weight:bold;">${boss.name}</span>
+                    <span style="font-size:11px;opacity:0.7;display:block;">
+                        ❤️ ${boss.hp} | 💪 ${boss.power} | 🛡️ ${boss.defense}
+                    </span>
+                </div>
+                <div style="font-size:12px;color:${isDefeated ? '#51cf66' : isCurrent ? '#ffd93d' : '#666'};">
+                    ${statusText}
+                </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;opacity:0.7;margin-top:5px;">
+                <span>🎁 ${boss.reward}🪙 ${boss.exp}⭐</span>
+                <span>${weapon ? '🗡️ ' + weapon.name : ''}</span>
+                ${btnHtml}
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function startEventBoss(day) {
+    let boss = eventBosses[day];
+    if (!boss) return;
+    if (game.p.lvl < boss.minLevel) {
+        alert('🔒 Нужен ' + boss.minLevel + ' уровень!');
+        return;
+    }
+    if (game.eventBossSystem.defeated[day]) {
+        alert('✅ Этот босс уже побеждён!');
+        return;
+    }
+    
+    // Создаём босса
+    let eventEnemy = {
+        n: '🌟 ' + boss.name + ' (ИВЕНТ)',
+        h: boss.hp,
+        pw: boss.power,
+        d: boss.defense,
+        r: boss.reward,
+        exp: boss.exp,
+        b: true,
+        ic: boss.icon,
+        isEvent: true,
+        day: day
+    };
+    
+    game.en = eventEnemy;
+    game.eh = eventEnemy.h;
+    game.fg = true;
+    game.p.h = game.p.mh;
+    game.p.e = game.p.me;
+    game.isEventBoss = true;
+
+    document.getElementById('ch').textContent = 'ИВЕНТ ' + day;
+    document.getElementById('lvl').textContent = game.p.lvl;
+    document.getElementById('gc').textContent = game.p.c;
+    document.getElementById('bossEmoji').textContent = boss.icon;
+    document.getElementById('enemyName').textContent = '🌟 ' + boss.name + ' (ИВЕНТ)';
+    document.getElementById('log').innerHTML = '';
+    addLog('🌟 ИВЕНТ: Бой с ' + boss.icon + ' ' + boss.name + '!');
+    addLog('💪 Сила: ' + boss.power + ' | 🛡️ Защита: ' + boss.defense);
+    addLog('📅 День ' + day + ' из 10');
+    
+    backToMenu();
+    document.getElementById('game').style.display = 'block';
+    updateHealth();
+
+    document.getElementById('ctrl').innerHTML = `
+        <button class="g" onclick="attackEventBoss()">🗡️ Атака</button>
+        <button class="r" onclick="defendEventBoss()">🛡️ Защита</button>
+    `;
+}
+
+function attackEventBoss() {
+    if (!game.fg) return;
+    let w = getWeapon();
+    let dmg = (w.d + Math.floor(game.p.pw * 0.6)) * 1.2;
+    dmg = Math.floor(dmg * (0.75 + Math.random() * 0.5));
+    dmg = Math.max(1, dmg - Math.floor(game.en.d * 0.2));
+    if (Math.random() < 0.15) {
+        dmg = Math.floor(dmg * 1.8);
+        addLog('💥 КРИТ!');
+    }
+    game.eh = Math.max(0, game.eh - dmg);
+    game.p.e = Math.max(0, game.p.e - 8);
+
+    addLog('🎯 ' + w.ic + ' ' + w.n + ' → ' + dmg + ' урона');
+    updateHealth();
+    if (game.eh <= 0) { eventBossVictory(); return; }
+    setTimeout(enemyTurnEventBoss, 500);
+}
+
+function enemyTurnEventBoss() {
+    if (!game.fg) return;
+    let dmg = Math.floor(game.en.pw * (0.5 + Math.random() * 0.6));
+    dmg = Math.max(1, dmg - Math.floor(game.p.def * 0.3));
+    if (Math.random() < 0.2) {
+        dmg = Math.floor(dmg * 1.5);
+        addLog('💢 Босс использует суперудар!');
+    }
+    game.p.h = Math.max(0, game.p.h - dmg);
+
+    addLog('💢 ' + game.en.ic + ' ' + game.en.n + ' → ' + dmg + ' урона');
+    updateHealth();
+    if (game.p.h <= 0) { eventBossDefeat(); return; }
+    game.p.e = Math.min(game.p.me, game.p.e + 5);
+    updateHealth();
+    addLog('🔄 Ваш ход!');
+}
+
+function defendEventBoss() {
+    if (!game.fg) return;
+    let heal = Math.floor(15 + Math.random() * 20);
+    if (game.p.potion > 0) {
+        heal += 20;
+        game.p.potion--;
+        addLog('💊 Использовано зелье!');
+    }
+    game.p.h = Math.min(game.p.mh, game.p.h + heal);
+    addLog('🛡️ Защита +' + heal + ' HP');
+    updateHealth();
+    setTimeout(() => {
+        let dmg = Math.floor(game.en.pw * 0.25);
+        dmg = Math.max(1, dmg - Math.floor(game.p.def * 0.2));
+        game.p.h = Math.max(0, game.p.h - dmg);
+        addLog('💢 ' + game.en.ic + ' ' + game.en.n + ' → ' + dmg + ' урона (ослаб)');
+        updateHealth();
+        if (game.p.h <= 0) { eventBossDefeat(); } else { addLog('🔄 Ваш ход!'); }
+    }, 500);
+}
+
+function eventBossVictory() {
+    game.fg = false;
+    let day = game.en.day;
+    let boss = eventBosses[day];
+    
+    game.p.w++;
+    game.p.t++;
+    game.p.c += boss.reward;
+    let xp = boss.exp;
+    addXP(xp);
+    
+    game.eventBossSystem.defeated[day] = true;
+    
+    addLog('🎉 ИВЕНТ: ' + boss.icon + ' ' + boss.name + ' побеждён! +' + boss.reward + '🪙 +' + xp + '⭐');
+    addLog('🗡️ Получено ивентовое оружие: ' + eventWeapons[day].name);
+    
+    save();
+    updateUI();
+    
+    setTimeout(() => {
+        document.getElementById('ctrl').innerHTML = `
+            <button class="gold" onclick="showEventBosses()" style="grid-column:span 2;">🌟 Вернуться к ивентам</button>
+            <button class="back" onclick="backToMenu()" style="grid-column:span 2;">🔙 В меню</button>
+        `;
+    }, 800);
+}
+
+function eventBossDefeat() {
+    game.fg = false;
+    game.p.l++;
+    game.p.t++;
+    addLog('💀 Поражение от ивентового босса...');
+    save();
+    setTimeout(() => {
+        document.getElementById('ctrl').innerHTML = `
+            <button class="r" onclick="startEventBoss(${game.en.day})" style="grid-column:span 2;">🔄 Попробовать снова</button>
+            <button class="back" onclick="backToMenu()" style="grid-column:span 2;">🔙 В меню</button>
+        `;
+    }, 800);
+}
+
+function claimEventWeapon(day) {
+    if (game.eventBossSystem.weaponsCollected.includes(day)) {
+        alert('✅ Оружие уже получено!');
+        return;
+    }
+    if (!game.eventBossSystem.defeated[day]) {
+        alert('🔒 Сначала победи босса!');
+        return;
+    }
+    
+    let weapon = eventWeapons[day];
+    if (!weapon) return;
+    
+    // Добавляем оружие игроку
+    let newWeapon = {
+        id: weapon.id,
+        n: weapon.name,
+        d: weapon.damage,
+        pr: 0,
+        ic: weapon.icon,
+        lvl: game.p.lvl,
+        isEvent: true
+    };
+    
+    game.p.wp.push({ ...newWeapon, eq: false });
+    game.eventBossSystem.weaponsCollected.push(day);
+    
+    addLog('🗡️ Получено ивентовое оружие: ' + weapon.icon + ' ' + weapon.name + ' (+' + weapon.damage + ' урона)');
+    alert('🗡️ Получено ивентовое оружие:\n' + weapon.icon + ' ' + weapon.name + '\nУрон: ' + weapon.damage);
+    
+    save();
+    updateUI();
+    renderEventBosses();
+}
+
+// ===== ДОБАВЛЯЕМ КНОПКУ В МЕНЮ =====
+document.addEventListener('DOMContentLoaded', function() {
+    let menu = document.getElementById('menu');
+    if (menu) {
+        let existing = document.getElementById('eventBossBtn');
+        if (!existing) {
+            let btn = document.createElement('button');
+            btn.id = 'eventBossBtn';
+            btn.className = 'event-btn';
+            btn.textContent = '🌟 Ивент-боссы';
+            btn.onclick = showEventBosses;
+            
+            let passBtn = document.getElementById('gamePassBtn');
+            if (passBtn) {
+                menu.insertBefore(btn, passBtn);
+            } else {
+                menu.appendChild(btn);
+            }
+        }
+    }
+});
+
+console.log('🌟 Система ивентовых боссов на 10 дней загружена!');
+console.log('📅 Каждый день новый босс!');
+console.log('🗡️ Побеждай и получай ивентовое оружие!');
 }
