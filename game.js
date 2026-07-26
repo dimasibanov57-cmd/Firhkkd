@@ -2874,3 +2874,84 @@ document.addEventListener('DOMContentLoaded', function() {
 console.log('🌟 Ивент на 20 дней загружен!');
 console.log('⚔️ 3 босса каждый день (всего 60 боссов)!');
 console.log('🗡️ 20 видов ивентового оружия!');
+// ============================================
+//  СИСТЕМА ПРОВЕРКИ ОБНОВЛЕНИЙ - ЧАСТЬ 1
+//  ВСТАВЬ В КОНЕЦ ФАЙЛА game.js
+// ============================================
+
+// ===== ВЕРСИЯ ИГРЫ =====
+const GAME_VERSION = '2.5.0';
+const UPDATE_DATE = '26.07.2026';
+
+// ===== ФУНКЦИЯ ПРОВЕРКИ ОБНОВЛЕНИЙ =====
+function checkForUpdates() {
+    let currentVersion = localStorage.getItem('gameVersion') || '1.0.0';
+    let latestVersion = GAME_VERSION;
+    
+    if (currentVersion !== latestVersion) {
+        // Есть обновление
+        let updateMsg = '🔄 ДОСТУПНО ОБНОВЛЕНИЕ!\n\n';
+        updateMsg += '📌 Текущая версия: ' + currentVersion + '\n';
+        updateMsg += '📌 Новая версия: ' + latestVersion + '\n';
+        updateMsg += '📅 Дата: ' + UPDATE_DATE + '\n\n';
+        updateMsg += '✅ Что нового:\n';
+        updateMsg += '• Ивент на 20 дней (60 боссов)\n';
+        updateMsg += '• 20 видов ивентового оружия\n';
+        updateMsg += '• Game Pass 900 уровней\n';
+        updateMsg += '• Экспедиции\n';
+        updateMsg += '• Система квестов\n';
+        updateMsg += '• Подарок на 10 уровне\n\n';
+        updateMsg += '🔄 Обнови страницу (Ctrl+F5)';
+        
+        alert(updateMsg);
+        localStorage.setItem('gameVersion', latestVersion);
+    } else {
+        alert('✅ Игра обновлена до последней версии ' + latestVersion + '!\n📅 ' + UPDATE_DATE);
+    }
+}
+
+// ===== ДОБАВЛЯЕМ КНОПКУ В МЕНЮ =====
+document.addEventListener('DOMContentLoaded', function() {
+    let menu = document.getElementById('menu');
+    if (menu) {
+        let existing = document.getElementById('updateBtn');
+        if (!existing) {
+            let btn = document.createElement('button');
+            btn.id = 'updateBtn';
+            btn.className = 'gold';
+            btn.textContent = '🔄 Проверить обновление';
+            btn.onclick = checkForUpdates;
+            btn.style.cssText = 'background: linear-gradient(45deg, #00b894, #00cec9); color: #fff; animation: glow 2s infinite;';
+            
+            let stats = menu.querySelector('.player-stats');
+            if (stats) {
+                stats.after(btn);
+            } else {
+                menu.appendChild(btn);
+            }
+        }
+    }
+});
+
+// ===== ПРИ ЗАГРУЗКЕ ПРОВЕРЯЕМ ОБНОВЛЕНИЕ =====
+(function() {
+    let savedVersion = localStorage.getItem('gameVersion');
+    if (!savedVersion) {
+        localStorage.setItem('gameVersion', GAME_VERSION);
+        console.log('✅ Игра установлена, версия: ' + GAME_VERSION);
+    } else if (savedVersion !== GAME_VERSION) {
+        console.log('🔄 Доступно обновление! ' + savedVersion + ' → ' + GAME_VERSION);
+        let lastNotify = localStorage.getItem('lastUpdateNotify') || 0;
+        if (Date.now() - lastNotify > 3600000) {
+            setTimeout(() => {
+                alert('🔄 Доступно обновление игры!\nНажмите "Проверить обновление" в меню.');
+            }, 2000);
+            localStorage.setItem('lastUpdateNotify', Date.now());
+        }
+    } else {
+        console.log('✅ Игра обновлена, версия: ' + GAME_VERSION);
+    }
+})();
+
+console.log('🔄 Система обновлений загружена! Версия: ' + GAME_VERSION);
+console.log('📅 Дата обновления: ' + UPDATE_DATE);
