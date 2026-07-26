@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚔️ БОЕВАЯ АРЕНА</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+
+<div id="menu">
+    <h1>⚔️ БОЕВАЯ АРЕНА</h1>
+    <div class="player-stats">
+        <div>🏆 Ур <span id="menuLvl">1</span></div>
+        <div>⭐ <span id="menuXp">0/100</span></div>
+        <div>🪙 <span id="menuCoin">100</span></div>
+    </div>
+    <div class="level-progress"><div class="fill" id="menuProgress" style="width:0%"></div></div>
+    <button class="b" onclick="startGame()">⚔️ Начать битву</button>
+    <button class="o" onclick="showWeapons()">🗡️ Оружие</button>
+    <button class="b" onclick="showStats()">📊 Стат</button>
+    <button class="o" onclick="showShop()">🏪 Магаз</button>
+    <button class="gold" onclick="showDailyBonus()">🎁 Бонус</button>
+    <button class="b" onclick="showChapterSelect()">📖 Выбрать босса</button>
+    <div style="font-size:11px;opacity:0.4;margin-top:10px">Боссов: <span id="menuCh">1</span>/100</div>
+</div>
+
+<div id="dailyBonus">
+    <h2>🎁 Ежедневный бонус</h2>
+    <div class="daily-card">
+        <div class="day">День <span id="dailyDay">1</span></div>
+        <div class="big" id="dailyReward">🪙 50</div>
+        <div class="daily-streak">🔥 Серия: <span id="dailyStreak">0</span> дней</div>
+        <div class="daily-timer" id="dailyTimer">⏳ Доступно сейчас!</div>
+        <button class="gold" onclick="claimDaily()" id="dailyBtn">🎁 Забрать</button>
+        <button class="back" onclick="backToMenu()">🔙 Назад</button>
+    </div>
+</div>
+
+<div id="chapterSelect">
+    <h2>📖 Выбор босса</h2>
+    <div style="display:flex;justify-content:space-between;font-size:12px;background:rgba(255,255,255,0.05);padding:8px;border-radius:8px;margin:5px 0">
+        <span>Уровень: <span style="color:#ffd93d" id="selectLvl">1</span></span>
+        <span>Доступно: <span style="color:#51cf66" id="selectAvailable">1</span></span>
+    </div>
+    <div class="chapter-grid" id="chapterGrid"></div>
+    <button class="g" onclick="startSelectedChapter()" id="btnStartChapter">⚔️ Начать битву</button>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+<div id="game">
+    <div class="info">
+        <div>Босс <span id="ch">1</span>/100</div>
+        <div>Ур <span id="lvl">1</span></div>
+        <div>⚡<span id="en">100</span></div>
+        <div>🪙<span id="gc">100</span></div>
+    </div>
+    <div id="bossEmoji" style="font-size:32px;display:block;margin:5px 0">👾</div>
+    <div style="display:flex;justify-content:space-between;font-size:13px">
+        <span id="enemyName">👾 Босс</span>
+        <span id="eht">100/100</span>
+    </div>
+    <div class="hp"><div id="eh" class="hpf hpe" style="width:100%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:5px">
+        <span>❤️ Игрок</span>
+        <span id="pht">100/100</span>
+    </div>
+    <div class="hp"><div id="ph" class="hpf" style="width:100%"></div></div>
+    <div class="log" id="log"><p>🏰 Добро пожаловать!</p></div>
+    <div class="gr" id="ctrl">
+        <button class="g" onclick="attack()">🗡️ Атака</button>
+        <button class="r" onclick="defend()">🛡️ Защита</button>
+    </div>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+<div id="stats">
+    <h2>📊 Статистика</h2>
+    <div class="stat">
+        <p>🏆 Побед: <span id="sw">0</span></p>
+        <p>💀 Поражений: <span id="sl">0</span></p>
+        <p>⚔️ Боев: <span id="st">0</span></p>
+        <p>📖 Босс: <span id="sc">1</span>/100</p>
+        <p>🎯 Уровень: <span id="slvl">1</span></p>
+        <p>⭐ Опыт: <span id="sxp">0</span></p>
+        <p>💪 Сила: <span id="spw">10</span></p>
+        <p>❤️ HP: <span id="shp">100</span></p>
+        <p>⚡ Энергия: <span id="sen">100</span></p>
+        <p>🪙 Монет: <span id="scoin">100</span></p>
+        <p>🛡️ Защита: <span id="sdef">2</span></p>
+        <p>💊 Зелья: <span id="spotion">0</span></p>
+    </div>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+<div id="shop">
+    <h2>🏪 Магазин</h2>
+    <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:10px;font-size:16px">
+        🪙 <span id="sc2">100</span>
+    </div>
+    <button class="b" onclick="buy('power')">💪 Сила +5 (50🪙)</button>
+    <button class="g" onclick="buy('health')">❤️ HP +25 (40🪙)</button>
+    <button class="b" onclick="buy('energy')">⚡ Энергия +15 (30🪙)</button>
+    <button class="r" onclick="buy('potion')">💊 Зелье HP (25🪙)</button>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+<div id="weapons">
+    <h2>🗡️ Оружейная</h2>
+    <div id="wl"></div>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+</div>
+<script src="game.js"></script>
+</body>
+</html>
