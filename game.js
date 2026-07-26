@@ -1424,4 +1424,20 @@ document.addEventListener('DOMContentLoaded', function() {
 })();
 
 console.log('📋 Система квестов Game Pass загружена!');
-console.log('📅 Ежедневные и еженедельные квесты доступны!');
+console.log('📅 Ежедневные и еженедельные квесты доступны!');// ===== СТАРТ С 10 УРОВНЯ (НОВЫЕ ИГРОКИ) =====
+if (!localStorage.getItem('gd')) {
+    game.p.lvl = 10;
+    game.p.mh = 200;
+    game.p.h = 200;
+    game.p.me = 150;
+    game.p.e = 150;
+    game.p.pw = 25;
+    game.p.def = 5;
+    game.p.c = 500;
+    game.p.xp = 0;
+    game.p.xn = 250;
+    game.p.giftClaimed = true;
+    save();
+    updateUI();
+    console.log('🎉 Новый игрок получил 10 уровень!');
+}
