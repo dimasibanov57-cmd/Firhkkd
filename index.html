@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>⚔️ БОЕВАЯ АРЕНА</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial;background:#0a0a1a;color:#fff;padding:10px;display:flex;justify-content:center;min-height:100vh}
+        #app{max-width:420px;width:100%;padding:15px;background:rgba(255,255,255,0.05);border-radius:15px;text-align:center}
+        h1{color:#ffd93d;font-size:22px;margin-bottom:10px}
+        h2{color:#ffd93d;font-size:18px;margin-bottom:10px}
+        button{padding:12px;margin:4px 0;border:none;border-radius:10px;font-size:14px;font-weight:bold;cursor:pointer;width:100%;transition:all .2s}
+        button:active{transform:scale(0.95)}
+        .gr{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+        .gr button{width:100%}
+        #game,#stats,#shop,#weapons,#chapterSelect,#dailyBonus{display:none}
+        .hp{width:100%;height:10px;background:#1a1a2e;border-radius:5px;margin:3px 0;overflow:hidden;border:1px solid rgba(255,255,255,0.1)}
+        .hpf{height:100%;background:linear-gradient(90deg,#00b894,#00cec9);transition:width .3s}
+        .hpe{background:linear-gradient(90deg,#e17055,#d63031)}
+        .log{background:#0a0a1a;padding:8px;border-radius:8px;min-height:70px;margin:8px 0;text-align:left;font-size:12px;border:1px solid rgba(255,255,255,0.05);overflow-y:auto;max-height:100px}
+        .log p{margin:2px 0;padding:2px 5px;border-radius:3px}
+        .log .d{color:#ff6b6b}
+        .log .h{color:#51cf66}
+        .log .s{color:#ffd93d}
+        .weapon-item{background:rgba(255,255,255,0.05);padding:8px;margin:4px 0;border-radius:8px;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent}
+        .weapon-item.eq{border-color:#00b894}
+        .weapon-item.lock{opacity:0.4}
+        .weapon-item button{padding:4px 12px;width:auto;background:#fdcb6e;color:#000;font-size:12px}
+        .stat{background:rgba(255,255,255,0.05);padding:12px;border-radius:10px}
+        .stat p{margin:5px 0;font-size:14px}
+        .stat span{color:#ffd93d;font-weight:bold}
+        .info{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:4px;background:rgba(255,255,255,0.05);padding:8px;border-radius:8px;margin-bottom:8px;font-size:12px}
+        .info span{font-weight:bold;color:#ffd93d}
+        .player-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;font-size:12px;background:rgba(255,255,255,0.03);padding:6px;border-radius:6px;margin-bottom:6px}
+        .player-stats div{text-align:center}
+        .player-stats span{color:#ffd93d}
+        .shake{animation:shake 0.3s}
+        @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+        .back{background:rgba(255,255,255,0.1);color:#fff}
+        .b{background:linear-gradient(45deg,#667eea,#764ba2);color:#fff}
+        .o{background:linear-gradient(45deg,#f7971e,#ffd200);color:#000}
+        .g{background:linear-gradient(45deg,#00b894,#00cec9);color:#fff}
+        .r{background:linear-gradient(45deg,#e17055,#d63031);color:#fff}
+        .gold{background:linear-gradient(45deg,#f7971e,#ffd200);color:#000}
+        .chapter-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:5px;margin:10px 0;max-height:350px;overflow-y:auto}
+        .chapter-grid button{padding:8px 4px;font-size:11px;border-radius:6px;border:2px solid transparent;background:rgba(255,255,255,0.05);color:#fff;cursor:pointer;transition:all .3s}
+        .chapter-grid button:active{transform:scale(0.95)}
+        .chapter-grid .active{border-color:#ffd93d;background:rgba(255,217,61,0.15)}
+        .chapter-grid .locked{opacity:0.4;cursor:not-allowed}
+        .chapter-grid .boss{border-color:#e17055}
+        .chapter-grid .boss.active{border-color:#fd79a8;background:rgba(225,112,85,0.2)}
+        .chapter-grid .req-level{font-size:7px;display:block;opacity:0.6}
+        .chapter-info{background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin:8px 0;font-size:13px}
+        .daily-card{background:linear-gradient(45deg,#1a1a3e,#2d1b69);border-radius:12px;padding:15px;margin:10px 0;border:1px solid #6c5ce7}
+        .daily-card .big{font-size:28px;margin:5px 0}
+        .daily-card .day{color:#a29bfe;font-size:14px}
+        .daily-timer{color:#ffd93d;font-size:13px;margin:5px 0}
+        .daily-streak{color:#00b894;font-size:14px;font-weight:bold}
+        .level-progress{width:100%;height:6px;background:#1a1a2e;border-radius:3px;margin:5px 0;overflow:hidden}
+        .level-progress .fill{height:100%;background:linear-gradient(90deg,#ffd93d,#f7971e);transition:width .3s;border-radius:3px}
+        @media(max-width:400px){#app{padding:10px}button{padding:10px;font-size:13px}}
+    </style>
+</head>
+<body>
+<div id="app">
+
+<div id="menu">
+    <h1>⚔️ БОЕВАЯ АРЕНА</h1>
+    <div class="player-stats">
+        <div>🏆 Ур <span id="menuLvl">1</span></div>
+        <div>⭐ <span id="menuXp">0/100</span></div>
+        <div>🪙 <span id="menuCoin">100</span></div>
+    </div>
+    <div class="level-progress"><div class="fill" id="menuProgress" style="width:0%"></div></div>
+    <button class="b" onclick="startGame()">⚔️ Битва</button>
+    <button class="o" onclick="showWeapons()">🗡️ Оружие</button>
+    <button class="b" onclick="showStats()">📊 Стат</button>
+    <button class="o" onclick="showShop()">🏪 Магаз</button>
+    <button class="gold" onclick="showDailyBonus()">🎁 Бонус</button>
+    <button class="b" onclick="showChapterSelect()">📖 Боссы</button>
+    <div style="font-size:11px;opacity:0.4;margin-top:10px">Боссов: <span id="menuCh">1</span>/100</div>
+</div>
+
+<div id="dailyBonus">
+    <h2>🎁 Ежедневный бонус</h2>
+    <div class="daily-card">
+        <div class="day">День <span id="dailyDay">1</span></div>
+        <div class="big" id="dailyReward">🪙 50</div>
+        <div class="daily-streak">🔥 Серия: <span id="dailyStreak">0</span> дней</div>
+        <div class="daily-timer" id="dailyTimer">⏳ Доступно!</div>
+        <button class="gold" onclick="claimDaily()" id="dailyBtn">🎁 Забрать</button>
+        <button class="back" onclick="backToMenu()">🔙 Назад</button>
+    </div>
+</div>
+
+<div id="chapterSelect">
+    <h2>📖 Выбор босса</h2>
+    <div style="display:flex;justify-content:space-between;font-size:12px;background:rgba(255,255,255,0.05);padding:8px;border-radius:8px;margin:5px 0">
+        <span>Уровень: <span style="color:#ffd93d" id="selectLvl">1</span></span>
+        <span>Доступно: <span style="color:#51cf66" id="selectAvailable">1</span></span>
+    </div>
+    <div class="chapter-grid" id="chapterGrid"></div>
+    <button class="g" onclick="startSelectedChapter()">⚔️ Начать</button>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div><div id="game">
+    <div class="info">
+        <div>Босс <span id="ch">1</span>/100</div>
+        <div>Ур <span id="lvl">1</span></div>
+        <div>⚡<span id="en">100</span></div>
+        <div>🪙<span id="gc">100</span></div>
+    </div>
+    <div id="bossEmoji" style="font-size:32px;margin:5px 0">👾</div>
+    <div style="display:flex;justify-content:space-between;font-size:13px">
+        <span id="enemyName">👾 Босс</span>
+        <span id="eht">100/100</span>
+    </div>
+    <div class="hp"><div id="eh" class="hpf hpe" style="width:100%"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:5px">
+        <span>❤️ Игрок</span>
+        <span id="pht">100/100</span>
+    </div>
+    <div class="hp"><div id="ph" class="hpf" style="width:100%"></div></div>
+    <div class="log" id="log"><p>🏰 Добро пожаловать!</p></div>
+    <div class="gr" id="ctrl">
+        <button class="g" onclick="attack()">🗡️ Атака</button>
+        <button class="r" onclick="defend()">🛡️ Защита</button>
+    </div>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+<div id="stats">
+    <h2>📊 Статистика</h2>
+    <div class="stat">
+        <p>🏆 Побед: <span id="sw">0</span></p>
+        <p>💀 Поражений: <span id="sl">0</span></p>
+        <p>⚔️ Боев: <span id="st">0</span></p>
+        <p>📖 Босс: <span id="sc">1</span>/100</p>
+        <p>🎯 Уровень: <span id="slvl">1</span></p>
+        <p>⭐ Опыт: <span id="sxp">0</span></p>
+        <p>💪 Сила: <span id="spw">10</span></p>
+        <p>❤️ HP: <span id="shp">100</span></p>
+        <p>⚡ Энергия: <span id="sen">100</span></p>
+        <p>🪙 Монет: <span id="scoin">100</span></p>
+        <p>🛡️ Защита: <span id="sdef">2</span></p>
+        <p>💊 Зелья: <span id="spotion">0</span></p>
+    </div>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+<div id="shop">
+    <h2>🏪 Магазин</h2>
+    <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:10px;font-size:16px">
+        🪙 <span id="sc2">100</span>
+    </div>
+    <button class="b" onclick="buy('power')">💪 Сила +5 (50🪙)</button>
+    <button class="g" onclick="buy('health')">❤️ HP +25 (40🪙)</button>
+    <button class="b" onclick="buy('energy')">⚡ Энергия +15 (30🪙)</button>
+    <button class="r" onclick="buy('potion')">💊 Зелье (25🪙)</button>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+<div id="weapons">
+    <h2>🗡️ Оружейная</h2>
+    <div id="wl"></div>
+    <button class="back" onclick="backToMenu()">🔙 Назад</button>
+</div>
+
+</div>
+<script>// ===== СОСТОЯНИЕ =====
+let game = {
+    p: { h: 100, mh: 100, e: 100, me: 100, pw: 10, def: 2, c: 100, w: 0, l: 0, t: 0, lvl: 1, xp: 0, xn: 100, wp: [], potion: 0 },
+    ch: 1,
+    fg: false,
+    en: null,
+    eh: 0,
+    selectedChapter: 1,
+    daily: { lastClaim: 0, streak: 0, day: 1 }
+};
+
+// ===== 100 БОССОВ =====
+const enemies = {};
+for (let i = 1; i <= 100; i++) {
+    let isBoss = i % 10 === 0;
+    let baseHP = 50 + i * 5;
+    let basePower = 5 + i * 0.8;
+    let baseDef = 1 + Math.floor(i / 20);
+    let reward = 10 + i * 2;
+    let expBonus = 8 + i * 1.2;
+    enemies[i] = {
+        n: isBoss ? '⭐ БОСС ' + i : 'Враг ' + i,
+        h: isBoss ? Math.floor(baseHP * 3) : Math.floor(baseHP),
+        pw: isBoss ? Math.floor(basePower * 2.5) : Math.floor(basePower),
+        d: isBoss ? Math.floor(baseDef * 2.5) : Math.floor(baseDef),
+        r: isBoss ? Math.floor(reward * 5) : Math.floor(reward),
+        exp: isBoss ? Math.floor(expBonus * 4) : Math.floor(expBonus),
+        b: isBoss,
+        ic: isBoss ? '👑' : '👾'
+    };
+}
+
+// ===== ОРУЖИЕ =====
+const wpn = {
+    f: { id: 'f', n: 'Кулаки', d: 5, pr: 0, ic: '👊', lvl: 1 },
+    s: { id: 's', n: 'Меч', d: 14, pr: 80, ic: '⚔️', lvl: 2 },
+    a: { id: 'a', n: 'Топор', d: 19, pr: 120, ic: '🪓', lvl: 3 },
+    b: { id: 'b', n: 'Лук', d: 12, pr: 100, ic: '🏹', lvl: 4 },
+    fi: { id: 'fi', n: 'Огн меч', d: 24, pr: 200, ic: '🔥', lvl: 5 },
+    wd: { id: 'wd', n: 'Посох', d: 17, pr: 150, ic: '🪄', lvl: 6 },
+    cr: { id: 'cr', n: 'Арбалет', d: 22, pr: 250, ic: '🎯', lvl: 7 },
+    da: { id: 'da', n: 'Меч тьмы', d: 35, pr: 400, ic: '🗡️', lvl: 8 },
+    st: { id: 'st', n: 'Посох маг', d: 30, pr: 350, ic: '🔮', lvl: 10 },
+    le: { id: 'le', n: 'Легенда', d: 50, pr: 1000, ic: '⭐', lvl: 12 },
+    dr: { id: 'dr', n: 'Драконобой', d: 60, pr: 1500, ic: '🐉', lvl: 14 }
+};
+
+// ===== ИНИЦИАЛИЗАЦИЯ =====
+function init() {
+    let saved = localStorage.getItem('gd');
+    if (saved) {
+        try {
+            let data = JSON.parse(saved);
+            Object.assign(game.p, data.p);
+            game.ch = data.ch || 1;
+            if (data.daily) game.daily = data.daily;
+        } catch(e) {}
+    }
+    if (!game.p.wp || !game.p.wp.length) {
+        game.p.wp = [{ ...wpn.f, eq: true }];
+    }
+    game.selectedChapter = game.ch;
+    updateUI();
+}// ===== НАВИГАЦИЯ =====
+function backToMenu() {
+    document.getElementById('menu').style.display = 'block';
+    document.getElementById('game').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('shop').style.display = 'none';
+    document.getElementById('weapons').style.display = 'none';
+    document.getElementById('chapterSelect').style.display = 'none';
+    document.getElementById('dailyBonus').style.display = 'none';
+    updateUI();
+}
+
+function showChapterSelect() {
+    backToMenu();
+    document.getElementById('chapterSelect').style.display = 'block';
+    renderChapterGrid();
+}
+
+function startGame() {
+    backToMenu();
+    document.getElementById('game').style.display = 'block';
+    startBattle();
+}
+
+function showStats() {
+    backToMenu();
+    document.getElementById('stats').style.display = 'block';
+    updateUI();
+}
+
+function showShop() {
+    backToMenu();
+    document.getElementById('shop').style.display = 'block';
+    document.getElementById('sc2').textContent = game.p.c;
+}
+
+function showWeapons() {
+    backToMenu();
+    document.getElementById('weapons').style.display = 'block';
+    updateWeapons();
+}
+
+function showDailyBonus() {
+    backToMenu();
+    document.getElementById('dailyBonus').style.display = 'block';
+    updateDailyUI();
+}
+
+// ===== ВЫБОР БОССА =====
+function renderChapterGrid() {
+    let grid = document.getElementById('chapterGrid');
+    grid.innerHTML = '';
+    let maxShow = 100;
+    document.getElementById('selectLvl').textContent = game.p.lvl;
+    let available = 0;
+    for (let i = 1; i <= maxShow; i++) {
+        let enemy = enemies[i];
+        if (!enemy) continue;
+        let isUnlocked = game.p.lvl >= Math.ceil(i / 10) + 1;
+        if (isUnlocked) available++;
+        let isSelected = i === game.selectedChapter;
+        let btn = document.createElement('button');
+        btn.className = '';
+        if (isSelected) btn.className += ' active';
+        if (enemy.b) btn.className += ' boss';
+        if (!isUnlocked) btn.className += ' locked';
+        btn.innerHTML = `${enemy.ic}<span style="display:block;font-size:9px;">${i}</span><span class="req-level">${isUnlocked ? '✅' : '🔒' + (Math.ceil(i/10)+1)}</span>`;
+        btn.onclick = function() {
+            if (!isUnlocked) { alert('🔒 Нужен ' + (Math.ceil(i/10)+1) + ' уровень!'); return; }
+            game.selectedChapter = i;
+            renderChapterGrid();
+        };
+        grid.appendChild(btn);
+    }
+    document.getElementById('selectAvailable').textContent = available;
+}
+
+function startSelectedChapter() {
+    let ch = game.selectedChapter;
+    let reqLvl = Math.ceil(ch / 10) + 1;
+    if (game.p.lvl < reqLvl) { alert('🔒 Нужен ' + reqLvl + ' уровень!'); return; }
+    game.ch = ch;
+    backToMenu();
+    document.getElementById('game').style.display = 'block';
+    startBattle();
+}// ===== БОЕВАЯ СИСТЕМА =====
+function startBattle() {
+    let d = enemies[game.ch];
+    if (!d) { alert('🏆 Все боссы побеждены!'); backToMenu(); return; }
+    let reqLvl = Math.ceil(game.ch / 10) + 1;
+    if (game.p.lvl < reqLvl) { alert('🔒 Нужен ' + reqLvl + ' уровень!'); backToMenu(); return; }
+    
+    game.en = { ...d };
+    game.eh = game.en.h;
+    game.fg = true;
+    game.p.h = game.p.mh;
+    game.p.e = game.p.me;
+
+    document.getElementById('ch').textContent = game.ch;
+    document.getElementById('lvl').textContent = game.p.lvl;
+    document.getElementById('gc').textContent = game.p.c;
+    document.getElementById('bossEmoji').textContent = game.en.ic;
+    document.getElementById('enemyName').textContent = game.en.ic + ' ' + game.en.n + (game.en.b ? ' 👑' : '');
+    document.getElementById('log').innerHTML = '';
+    addLog('⚔️ Бой с ' + game.en.ic + ' ' + game.en.n + (game.en.b ? ' (БОСС!)' : '') + '!');
+    addLog('💪 Сила: ' + game.en.pw + ' | 🛡️ Защита: ' + game.en.d);
+    updateHealth();
+
+    document.getElementById('ctrl').innerHTML = `
+        <button class="g" onclick="attack()">🗡️ Атака</button>
+        <button class="r" onclick="defend()">🛡️ Защита</button>
+    `;
+}
+
+function getWeapon() {
+    let w = game.p.wp.find(w => w.eq);
+    return w || { ...wpn.f };
+}
+
+function attack() {
+    if (!game.fg) return;
+    let w = getWeapon();
+    let dmg = w.d + Math.floor(game.p.pw * 0.6);
+    dmg = Math.floor(dmg * (0.75 + Math.random() * 0.5));
+    dmg = Math.max(1, dmg - Math.floor(game.en.d * 0.2));
+    if (Math.random() < 0.15) {
+        dmg = Math.floor(dmg * 1.8);
+        addLog('💥 КРИТ!');
+    }
+    game.eh = Math.max(0, game.eh - dmg);
+    game.p.e = Math.max(0, game.p.e - 8);
+
+    document.getElementById('enemyName').className = 'shake';
+    setTimeout(() => document.getElementById('enemyName').className = '', 300);
+    addLog('🎯 ' + w.ic + ' ' + w.n + ' → ' + dmg + ' урона');
+    updateHealth();
+    if (game.eh <= 0) { victory(); return; }
+    setTimeout(enemyTurn, 500);
+}
+
+function enemyTurn() {
+    if (!game.fg) return;
+    let dmg = Math.floor(game.en.pw * (0.5 + Math.random() * 0.6));
+    dmg = Math.max(1, dmg - Math.floor(game.p.def * 0.3));
+    if (game.en.b && Math.random() < 0.2) {
+        dmg = Math.floor(dmg * 1.5);
+        addLog('💢 Босс использует суперудар!');
+    }
+    game.p.h = Math.max(0, game.p.h - dmg);
+
+    document.getElementById('pht').className = 'shake';
+    setTimeout(() => document.getElementById('pht').className = '', 300);
+    addLog('💢 ' + game.en.ic + ' ' + game.en.n + ' → ' + dmg + ' урона');
+    updateHealth();
+    if (game.p.h <= 0) { defeat(); return; }
+    game.p.e = Math.min(game.p.me, game.p.e + 5);
+    updateHealth();
+    addLog('🔄 Ваш ход!');
+}
+
+function defend() {
+    if (!game.fg) return;
+    let heal = Math.floor(15 + Math.random() * 20);
+    if (game.p.potion > 0) {
+        heal += 20;
+        game.p.potion--;
+        addLog('💊 Использовано зелье!');
+    }
+    game.p.h = Math.min(game.p.mh, game.p.h + heal);
+    addLog('🛡️ Защита +' + heal + ' HP');
+    updateHealth();
+    setTimeout(() => {
+        let dmg = Math.floor(game.en.pw * 0.25);
+        dmg = Math.max(1, dmg - Math.floor(game.p.def * 0.2));
+        game.p.h = Math.max(0, game.p.h - dmg);
+        addLog('💢 ' + game.en.ic + ' ' + game.en.n + ' → ' + dmg + ' урона (ослаб)');
+        updateHealth();
+        if (game.p.h <= 0) { defeat(); } else { addLog('🔄 Ваш ход!'); }
+    }, 500);
+}
+
+function victory() {
+    game.fg = false;
+    game.p.w++;
+    game.p.t++;
+    game.p.c += game.en.r;
+    let xp = Math.floor(15 + game.en.h * 0.08 + game.en.pw * 0.3);
+    if (game.en.b) {
+        xp = Math.floor(xp * 2.5);
+        addLog('👑 Бонус за босса!');
+    }
+    addXP(xp);
+    addLog('🎉 ПОБЕДА! +' + game.en.r + '🪙 +' + xp + '⭐');
+    save();
+    setTimeout(() => {
+        let ctrl = document.getElementById('ctrl');
+        let nextCh = game.ch + 1;
+        if (nextCh <= 100) {
+            ctrl.innerHTML = `
+                <button class="g" onclick="nextBoss()" style="grid-column:span 2;">⚔️ След босс</button>
+                <button class="b" onclick="showChapterSelect()" style="grid-column:span 2;">📖 Выбрать</button>
+                <button class="back" onclick="backToMenu()" style="grid-column:span 2;">🔙 В меню</button>
+            `;
+        } else {
+            ctrl.innerHTML = `<button class="gold" onclick="backToMenu()" style="grid-column:span 2;">🏆 Все боссы побеждены!</button>`;
+        }
+    }, 800);
+}
+
+function nextBoss() {
+    game.ch++;
+    startBattle();
+}
+
+function defeat() {
+    game.fg = false;
+    game.p.l++;
+    game.p.t++;
+    let xp = Math.floor(3 + game.ch * 0.5);
+    addXP(xp);
+    addLog('💀 Поражение... +' + xp + '⭐');
+    save();
+    setTimeout(() => {
+        document.getElementById('ctrl').innerHTML = `
+            <button class="r" onclick="restart()" style="grid-column:span 2;">🔄 Реванш</button>
+            <button class="back" onclick="backToMenu()" style="grid-column:span 2;">🔙 В меню</button>
+        `;
+    }, 800);
+}
+
+function restart() {
+    game.p.h = game.p.mh;
+    game.p.e = game.p.me;
+    game.eh = game.en.h;
+    game.fg = true;
+    updateHealth();
+    addLog('🔄 Новый бой!');
+    document.getElementById('ctrl').innerHTML = `
+        <button class="g" onclick="attack()">🗡️ Атака</button>
+        <button class="r" onclick="defend()">🛡️ Защита</button>
+    `;
+}// ===== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ =====
+function addXP(a) {
+    game.p.xp += a;
+    while (game.p.xp >= game.p.xn) {
+        game.p.xp -= game.p.xn;
+        game.p.lvl++;
+        game.p.xn = Math.floor(game.p.xn * 1.5) + 60;
+        game.p.mh += 20;
+        game.p.h = game.p.mh;
+        game.p.me += 12;
+        game.p.e = game.p.me;
+        game.p.pw += 3;
+        game.p.def += 1;
+        addLog('🎊 УРОВЕНЬ ' + game.p.lvl + '!');
+        let lvl = game.p.lvl;
+        Object.values(wpn).forEach(w => {
+            if (w.lvl <= lvl && !game.p.wp.find(p => p.id === w.id)) {
+                game.p.wp.push({ ...w, eq: false });
+                addLog('🗡️ ' + w.ic + ' ' + w.n);
+            }
+        });
+    }
+}
+
+function addLog(msg) {
+    let log = document.getElementById('log');
+    if (!log) return;
+    let p = document.createElement('p');
+    p.textContent = msg;
+    if (msg.includes('урона') || msg.includes('💢')) p.className = 'd';
+    else if (msg.includes('Защита') || msg.includes('+')) p.className = 'h';
+    else if (msg.includes('КРИТ') || msg.includes('⚡')) p.className = 's';
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+    if (log.children.length > 30) log.removeChild(log.firstChild);
+}
+
+function updateHealth() {
+    let pH = (game.p.h / game.p.mh) * 100;
+    let eH = (game.eh / game.en.h) * 100;
+    document.getElementById('ph').style.width = Math.max(0, pH) + '%';
+    document.getElementById('eh').style.width = Math.max(0, eH) + '%';
+    document.getElementById('pht').textContent = Math.floor(game.p.h) + '/' + game.p.mh;
+    document.getElementById('eht').textContent = Math.floor(game.eh) + '/' + game.en.h;
+    document.getElementById('en').textContent = Math.floor(game.p.e);
+    document.getElementById('gc').textContent = game.p.c;
+}
+
+function updateUI() {
+    let el = (id) => document.getElementById(id);
+    if (el('sw')) el('sw').textContent = game.p.w;
+    if (el('sl')) el('sl').textContent = game.p.l;
+    if (el('st')) el('st').textContent = game.p.t;
+    if (el('sc')) el('sc').textContent = game.ch;
+    if (el('slvl')) el('slvl').textContent = game.p.lvl;
+    if (el('sxp')) el('sxp').textContent = game.p.xp;
+    if (el('spw')) el('spw').textContent = game.p.pw;
+    if (el('shp')) el('shp').textContent = game.p.mh;
+    if (el('sen')) el('sen').textContent = game.p.me;
+    if (el('scoin')) el('scoin').textContent = game.p.c;
+    if (el('sdef')) el('sdef').textContent = game.p.def;
+    if (el('spotion')) el('spotion').textContent = game.p.potion || 0;
+    if (el('sc2')) el('sc2').textContent = game.p.c;
+    if (el('menuLvl')) el('menuLvl').textContent = game.p.lvl;
+    if (el('menuXp')) el('menuXp').textContent = game.p.xp + '/' + game.p.xn;
+    if (el('menuCoin')) el('menuCoin').textContent = game.p.c;
+    if (el('menuCh')) el('menuCh').textContent = game.ch;
+    if (el('menuProgress')) {
+        let pct = (game.p.xp / game.p.xn) * 100;
+        el('menuProgress').style.width = Math.min(100, pct) + '%';
+    }
+}
+
+function updateWeapons() {
+    let container = document.getElementById('wl');
+    if (!container) return;
+    container.innerHTML = '';
+    let sorted = Object.values(wpn).sort((a, b) => a.lvl - b.lvl);
+    sorted.forEach(w => {
+        let owned = game.p.wp.find(p => p.id === w.id);
+        let eq = owned && owned.eq;
+        let lock = w.lvl > game.p.lvl;
+        let div = document.createElement('div');
+        div.className = 'weapon-item' + (eq ? ' eq' : '') + (lock ? ' lock' : '');
+        let act = '';
+        if (lock) act = '🔒 ' + w.lvl + 'ур';
+        else if (!owned) act = '<button onclick="buyWeapon(\'' + w.id + '\')">' + w.pr + '🪙</button>';
+        else if (eq) act = '✅';
+        else act = '<button onclick="equipWeapon(\'' + w.id + '\')">Экип</button>';
+        div.innerHTML = '<div><span style="font-size:22px">' + w.ic + '</span> <b>' + w.n + '</b> <span style="font-size:11px;opacity:.6">(' + w.d + ')</span></div><div>' + act + '</div>';
+        container.appendChild(div);
+    });
+}
+
+function buyWeapon(id) {
+    let w = wpn[id];
+    if (game.p.c < w.pr) { alert('Нет монет!'); return; }
+    if (game.p.wp.find(p => p.id === id)) { alert('Уже есть!'); return; }
+    game.p.c -= w.pr;
+    game.p.wp.push({ ...w, eq: false });
+    save();
+    updateWeapons();
+    updateUI();
+    addLog('🛒 ' + w.ic + ' ' + w.n);
+}
+
+function equipWeapon(id) {
+    game.p.wp.forEach(w => w.eq = false);
+    let w = game.p.wp.find(w => w.id === id);
+    if (w) {
+        w.eq = true;
+        save();
+        updateWeapons();
+        addLog('🗡️ ' + w.ic + ' ' + w.n);
+    }
+}
+
+function buy(type) {
+    let costs = { power: 50, health: 40, energy: 30, potion: 25 };
+    if (game.p.c < costs[type]) { alert('Нет монет!'); return; }
+    game.p.c -= costs[type];
+    if (type == 'power') {
+        game.p.pw += 5;
+        alert('💪 Сила +5 (' + game.p.pw + ')');
+    } else if (type == 'health') {
+        game.p.mh += 25;
+        game.p.h = game.p.mh;
+        alert('❤️ HP +25 (' + game.p.mh + ')');
+    } else if (type == 'energy') {
+        game.p.me += 15;
+        game.p.e = game.p.me;
+        alert('⚡ Энергия +15 (' + game.p.me + ')');
+    } else if (type == 'potion') {
+        game.p.potion = (game.p.potion || 0) + 1;
+        alert('💊 Зелье +1 (' + game.p.potion + ')');
+    }
+    save();
+    document.getElementById('sc2').textContent = game.p.c;
+    updateUI();
+}
+
+function updateDailyUI() {
+    let now = Date.now();
+    let last = game.daily.lastClaim || 0;
+    let diff = now - last;
+    let hours = Math.floor((24 * 3600000 - diff) / 3600000);
+    let minutes = Math.floor(((24 * 3600000 - diff) % 3600000) / 60000);
+    document.getElementById('dailyDay').textContent = game.daily.day || 1;
+    document.getElementById('dailyStreak').textContent = game.daily.streak || 0;
+    let reward = 50 + (game.daily.streak || 0) * 10;
+    document.getElementById('dailyReward').textContent = '🪙 ' + reward;
+    if (diff < 24 * 3600000) {
+        document.getElementById('dailyTimer').textContent = '⏳ Доступно через ' + hours + 'ч ' + minutes + 'м';
+        document.getElementById('dailyBtn').disabled = true;
+        document.getElementById('dailyBtn').textContent = '⏳ Ожидание';
+    } else {
+        document.getElementById('dailyTimer').textContent = '✅ Доступно сейчас!';
+        document.getElementById('dailyBtn').disabled = false;
+        document.getElementById('dailyBtn').textContent = '🎁 Забрать';
+    }
+}
+
+function claimDaily() {
+    let now = Date.now();
+    let last = game.daily.lastClaim || 0;
+    if (now - last < 24 * 3600000) { alert('⏳ Подожди 24 часа!'); return; }
+    let reward = 50 + (game.daily.streak || 0) * 10;
+    game.p.c += reward;
+    game.daily.streak = (game.daily.streak || 0) + 1;
+    game.daily.day = (game.daily.day || 1) + 1;
+    game.daily.lastClaim = now;
+    save();
+    updateDailyUI();
+    updateUI();
+    addLog('🎁 Бонус: +' + reward + '🪙');
+    alert('🎁 Получено ' + reward + ' монет!');
+}
+
+function save() {
+    try {
+        localStorage.setItem('gd', JSON.stringify({ p: game.p, ch: game.ch, daily: game.daily }));
+    } catch(e) {}
+}
+
+// ===== ЗАПУСК =====
+document.addEventListener('DOMContentLoaded', function() {
+    init();
+    console.log('✅ Игра загружена!');
+    updateDailyUI();
+});
+
+// ===== АВТООБНОВЛЕНИЕ =====
+setInterval(function() {
+    try {
+        updateUI();
+        if (typeof updateDailyUI === 'function') updateDailyUI();
+        save();
+    } catch(e) {}
+}, 10000);
+</script>
+</body>
+</html>
