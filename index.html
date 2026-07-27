@@ -671,5 +671,403 @@ setInterval(function() {
     } catch(e) {}
 }, 10000);
 </script>
-</body>
+<script>
+// ============================================
+//  GAME PASS 1000 УРОВНЕЙ + СТАРТ 10 УРОВНЯ + КВЕСТЫ
+//  ВСТАВЬ В КОНЕЦ ФАЙЛА index.html
+// ============================================
+
+(function() {
+    console.log('🌟 Загрузка Game Pass 1000...');
+    
+    // ===== СТАРТ С 10 УРОВНЯ =====
+    if (!localStorage.getItem('gd')) {
+        if (game && game.p) {
+            game.p.lvl = 10;
+            game.p.mh = 200;
+            game.p.h = 200;
+            game.p.me = 150;
+            game.p.e = 150;
+            game.p.pw = 25;
+            game.p.def = 5;
+            game.p.c = 500;
+            game.p.xp = 0;
+            game.p.xn = 250;
+            console.log('🎉 Новый игрок получил 10 уровень!');
+            save();
+            updateUI();
+        }
+    }
+    
+    // ===== GAME PASS =====
+    if (!game.gamePass) {
+        game.gamePass = {
+            level: 1,
+            xp: 0,
+            xpToNext: 100,
+            premium: false,
+            totalXp: 0
+        };
+    }
+    
+    // ===== НАГРАДЫ ЗА УРОВНИ =====
+    function getPassReward(level) {
+        let coins = 10 + level * 2;
+        let exp = 5 + level;
+        if (level % 10 === 0) { coins = coins * 3; exp = exp * 3; }
+        if (level % 50 === 0) { coins = coins * 5; }
+        if (level % 100 === 0) { coins = coins * 10; exp = exp * 5; }
+        if (level % 250 === 0) { coins = coins * 20; }
+        if (level % 500 === 0) { coins = coins * 50; exp = exp * 10; }
+        if (level === 1000) { coins = 100000; exp = 50000; }
+        return { coins: Math.floor(coins), exp: Math.floor(exp) };
+    }
+    
+    // ===== ПОКАЗАТЬ GAME PASS =====
+    function showGamePass() {
+        if (typeof backToMenu === 'function') backToMenu();
+        let passDiv = document.getElementById('gamePassPanel');
+        if (!passDiv) {
+            let app = document.getElementById('app');
+            let newDiv = document.createElement('div');
+            newDiv.id = 'gamePassPanel';
+            newDiv.style.display = 'none';
+            newDiv.innerHTML = `
+                <h2>🎖️ GAME PASS 1000</h2>
+                <div style="background:rgba(255,255,255,0.05);padding:12px;border-radius:10px;margin:10px 0;">
+                    <div style="display:flex;justify-content:space-between;font-size:14px;">
+                        <span>🏆 Уровень: <span id="passLevel" style="color:#ffd93d;">1</span></span>
+                        <span>⭐ <span id="passXp" style="color:#ffd93d;">0</span>/<span id="passXpNext">100</span></span>
+                    </div>
+                    <div class="level-progress"><div class="fill" id="passProgress" style="width:0%"></div></div>
+                    <div style="font-size:12px;opacity:0.7;margin-top:5px;">
+                        🪙 Всего XP: <span id="passTotalXp" style="color:#ffd93d;">0</span>
+                    </div>
+                    <div style="font-size:12px;margin-top:5px;" id="passStatus">
+                        ${game.gamePass.premium ? '🌟 Премиум активен (+50%)' : '🔓 Купи премиум за 1000🪙'}
+                    </div>
+                    <button class="gold" onclick="buyPremiumPass()" id="premiumBtn">
+                        ${game.gamePass.premium ? '✅ Премиум куплен' : '💎 Купить премиум (1000🪙)'}
+                    </button>
+                </div>
+                <div id="passRewardsList" style="max-height:300px;overflow-y:auto;"></div>
+                <button class="back" onclick="backToMenu()">🔙 Назад</button>
+            `;
+            app.appendChild(newDiv);
+            passDiv = document.getElementById('gamePassPanel');
+        }
+        passDiv.style.display = 'block';
+        updatePassUI();
+    }
+    
+    function updatePassUI() {
+        document.getElementById('passLevel').textContent = game.gamePass.level;
+        document.getElementById('passXp').textContent = game.gamePass.xp;
+        document.getElementById('passXpNext').textContent = game.gamePass.xpToNext;
+        document.getElementById('passTotalXp').textContent = game.gamePass.totalXp || 0;
+        
+        let progress = (game.gamePass.xp / game.gamePass.xpToNext) * 100;
+        document.getElementById('passProgress').style.width = Math.min(100, progress) + '%';
+        
+        let status = document.getElementById('passStatus');
+        if (game.gamePass.premium) {
+            status.innerHTML = '🌟 Премиум активен (+50% XP)';
+            status.style.color = '#ffd93d';
+        } else {
+            status.innerHTML = '🔓 Купи премиум за 1000🪙 (+50% XP)';
+            status.style.color = '#a29bfe';
+        }
+        
+        let btn = document.getElementById('premiumBtn');
+        if (game.gamePass.premium) {
+            btn.textContent = '✅ Премиум куплен';
+            btn.disabled = true;
+        } else {
+            btn.textContent = '💎 Купить премиум (1000🪙)';
+            btn.disabled = false;
+        }
+        
+        renderPassRewards();
+    }
+    
+    function renderPassRewards() {
+        let container = document.getElementById('passRewardsList');
+        container.innerHTML = '';
+        let currentLevel = game.gamePass.level;
+        let showLevels = Math.min(currentLevel + 10, 1000);
+        for (let i = 1; i <= showLevels; i++) {
+            let reward = getPassReward(i);
+            let isUnlocked = i <= currentLevel;
+            let isCurrent = i === currentLevel;
+            let div = document.createElement('div');
+            div.style.cssText = `
+                background: ${isUnlocked ? 'rgba(0,184,148,0.1)' : isCurrent ? 'rgba(255,217,61,0.15)' : 'rgba(255,255,255,0.03)'};
+                border: ${isCurrent ? '2px solid #ffd93d' : isUnlocked ? '1px solid #00b894' : '1px solid transparent'};
+                border-radius: 6px;
+                padding: 6px 10px;
+                margin: 3px 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 12px;
+                opacity: ${isUnlocked || isCurrent ? 1 : 0.5};
+            `;
+            let statusText = isUnlocked ? '✅' : isCurrent ? '⬅️' : '🔒';
+            div.innerHTML = `<div>${isCurrent ? '⭐' : ''} Ур.${i}</div><div>🎁 ${reward.coins}🪙 +${reward.exp}⭐</div><div>${statusText}</div>`;
+            container.appendChild(div);
+        }
+        if (currentLevel < 1000) {
+            let more = document.createElement('div');
+            more.style.cssText = 'text-align:center;padding:5px;opacity:0.5;font-size:11px;';
+            more.textContent = `... и ещё ${1000 - showLevels} уровней до 1000`;
+            container.appendChild(more);
+        }
+    }
+    
+    function addPassXP(amount) {
+        if (game.gamePass.premium) amount = Math.floor(amount * 1.5);
+        game.gamePass.xp += amount;
+        game.gamePass.totalXp = (game.gamePass.totalXp || 0) + amount;
+        while (game.gamePass.xp >= game.gamePass.xpToNext && game.gamePass.level < 1000) {
+            game.gamePass.xp -= game.gamePass.xpToNext;
+            game.gamePass.level++;
+            game.gamePass.xpToNext = Math.floor(game.gamePass.xpToNext * 1.15) + 50;
+            let reward = getPassReward(game.gamePass.level);
+            game.p.c += reward.coins;
+            if (typeof addXP === 'function') addXP(reward.exp);
+            addLog('🎖️ GAME PASS Уровень ' + game.gamePass.level + '! +' + reward.coins + '🪙 +' + reward.exp + '⭐');
+            if (game.gamePass.level % 10 === 0) {
+                alert('🎖️ GAME PASS уровень ' + game.gamePass.level + '!\n+' + reward.coins + '🪙 +' + reward.exp + '⭐');
+            }
+            save();
+            updatePassUI();
+            updateUI();
+        }
+        save();
+        updatePassUI();
+        updateUI();
+    }
+    
+    function buyPremiumPass() {
+        if (game.gamePass.premium) { alert('✅ Премиум уже активен!'); return; }
+        if (game.p.c < 1000) { alert('🔒 Нужно 1000 монет!'); return; }
+        game.p.c -= 1000;
+        game.gamePass.premium = true;
+        addLog('🌟 Куплен премиум Game Pass! +50% XP');
+        alert('🌟 Премиум Game Pass активирован! +50% XP!');
+        save();
+        updatePassUI();
+        updateUI();
+    }
+    
+    // ============================================
+    //  КВЕСТЫ ДЛЯ GAME PASS
+    // ============================================
+    
+    if (!game.gamePassQuests) {
+        game.gamePassQuests = {
+            daily: [],
+            weekly: [],
+            lastReset: Date.now()
+        };
+    }
+    
+    function generateDailyQuests() {
+        return [
+            { id: 'd1', name: 'Убить 5 боссов', target: 5, reward: 50, icon: '⚔️', type: 'kill', progress: 0, done: false },
+            { id: 'd2', name: 'Заработать 200 монет', target: 200, reward: 30, icon: '🪙', type: 'coins', progress: 0, done: false },
+            { id: 'd3', name: 'Провести 3 боя', target: 3, reward: 40, icon: '⚔️', type: 'battle', progress: 0, done: false },
+            { id: 'd4', name: 'Убить 1 босса', target: 1, reward: 25, icon: '👑', type: 'boss', progress: 0, done: false }
+        ];
+    }
+    
+    function generateWeeklyQuests() {
+        return [
+            { id: 'w1', name: 'Убить 50 боссов', target: 50, reward: 200, icon: '⚔️', type: 'kill', progress: 0, done: false },
+            { id: 'w2', name: 'Заработать 2000 монет', target: 2000, reward: 150, icon: '🪙', type: 'coins', progress: 0, done: false },
+            { id: 'w3', name: 'Провести 20 боёв', target: 20, reward: 180, icon: '⚔️', type: 'battle', progress: 0, done: false },
+            { id: 'w4', name: 'Убить 10 боссов', target: 10, reward: 120, icon: '👑', type: 'boss', progress: 0, done: false }
+        ];
+    }
+    
+    function initQuests() {
+        let now = Date.now();
+        let dayDiff = Math.floor((now - (game.gamePassQuests.lastReset || 0)) / (24 * 3600000));
+        if (dayDiff >= 1 || !game.gamePassQuests.daily || game.gamePassQuests.daily.length === 0) {
+            game.gamePassQuests.daily = generateDailyQuests();
+            game.gamePassQuests.lastReset = now;
+            addLog('📋 Ежедневные квесты обновлены!');
+        }
+        if (dayDiff >= 7 || !game.gamePassQuests.weekly || game.gamePassQuests.weekly.length === 0) {
+            game.gamePassQuests.weekly = generateWeeklyQuests();
+            addLog('📋 Еженедельные квесты обновлены!');
+        }
+        save();
+    }
+    
+    function updateQuestProgress(type, amount) {
+        if (!game.gamePassQuests) return;
+        [...(game.gamePassQuests.daily || []), ...(game.gamePassQuests.weekly || [])].forEach(q => {
+            if (!q.done && q.type === type) {
+                q.progress = (q.progress || 0) + amount;
+                if (q.progress >= q.target) {
+                    q.done = true;
+                    addLog('✅ Квест выполнен: ' + q.icon + ' ' + q.name + '!');
+                }
+            }
+        });
+        save();
+        updateQuestsUI();
+    }
+    
+    function claimQuestReward(id) {
+        let allQuests = [...(game.gamePassQuests.daily || []), ...(game.gamePassQuests.weekly || [])];
+        let quest = allQuests.find(q => q.id === id);
+        if (!quest) return;
+        if (!quest.done) { alert('Квест ещё не выполнен!'); return; }
+        if (quest.claimed) { alert('Награда уже получена!'); return; }
+        game.p.c += quest.reward;
+        addPassXP(quest.reward);
+        quest.claimed = true;
+        addLog('🎁 Награда за квест: +' + quest.reward + '🪙 +' + quest.reward + ' XP');
+        alert('🎁 Получено: ' + quest.reward + '🪙 и ' + quest.reward + ' XP');
+        save();
+        updateQuestsUI();
+        updateUI();
+    }
+    
+    function showQuests() {
+        if (typeof backToMenu === 'function') backToMenu();
+        let questDiv = document.getElementById('questsPanel');
+        if (!questDiv) {
+            let app = document.getElementById('app');
+            let newDiv = document.createElement('div');
+            newDiv.id = 'questsPanel';
+            newDiv.style.display = 'none';
+            newDiv.innerHTML = `
+                <h2>📋 Квесты Game Pass</h2>
+                <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin:10px 0;font-size:13px;">
+                    <div style="display:flex;justify-content:space-between;">
+                        <span>📅 Ежедневные: <span id="dailyCount">0</span>/4</span>
+                        <span>📅 Еженедельные: <span id="weeklyCount">0</span>/4</span>
+                    </div>
+                </div>
+                <div id="questsList" style="max-height:400px;overflow-y:auto;"></div>
+                <button class="back" onclick="backToMenu()">🔙 Назад</button>
+            `;
+            app.appendChild(newDiv);
+            questDiv = document.getElementById('questsPanel');
+        }
+        questDiv.style.display = 'block';
+        updateQuestsUI();
+    }
+    
+    function updateQuestsUI() {
+        let container = document.getElementById('questsList');
+        if (!container) return;
+        container.innerHTML = '';
+        let dailyDone = 0, weeklyDone = 0;
+        
+        if (game.gamePassQuests.daily) {
+            let title = document.createElement('div');
+            title.style.cssText = 'font-weight:bold;color:#ffd93d;margin:10px 0 5px 0;font-size:14px;';
+            title.textContent = '📅 Ежедневные квесты';
+            container.appendChild(title);
+            game.gamePassQuests.daily.forEach(q => {
+                dailyDone += q.done ? 1 : 0;
+                container.appendChild(createQuestElement(q));
+            });
+        }
+        
+        if (game.gamePassQuests.weekly) {
+            let title = document.createElement('div');
+            title.style.cssText = 'font-weight:bold;color:#ffd93d;margin:15px 0 5px 0;font-size:14px;';
+            title.textContent = '📅 Еженедельные квесты';
+            container.appendChild(title);
+            game.gamePassQuests.weekly.forEach(q => {
+                weeklyDone += q.done ? 1 : 0;
+                container.appendChild(createQuestElement(q));
+            });
+        }
+        
+        document.getElementById('dailyCount').textContent = dailyDone;
+        document.getElementById('weeklyCount').textContent = weeklyDone;
+    }
+    
+    function createQuestElement(quest) {
+        let div = document.createElement('div');
+        let progress = Math.min(100, (quest.progress / quest.target) * 100);
+        let isDone = quest.done;
+        let isClaimed = quest.claimed;
+        div.style.cssText = `
+            background: ${isDone ? 'rgba(0,184,148,0.1)' : 'rgba(255,255,255,0.03)'};
+            border: ${isDone ? '1px solid #00b894' : '1px solid transparent'};
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin: 4px 0;
+            opacity: ${isClaimed ? 0.5 : 1};
+        `;
+        let statusText = isClaimed ? '✅ Получено' : isDone ? '🎁 Готово!' : `${quest.progress}/${quest.target}`;
+        let btnHtml = isDone && !isClaimed ? `<button class="gold" onclick="claimQuestReward('${quest.id}')" style="margin-top:4px;padding:4px 10px;font-size:11px;">🎁 Забрать</button>` : '';
+        div.innerHTML = `
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <div><span style="font-size:16px;">${quest.icon}</span> <span style="font-weight:bold;font-size:13px;">${quest.name}</span></div>
+                <div style="font-size:12px;color:${isDone ? '#51cf66' : '#ffd93d'};">${statusText}</div>
+            </div>
+            <div class="hp" style="margin:4px 0;"><div class="hpf" style="width:${progress}%;background:${isDone ? 'linear-gradient(90deg,#00b894,#00cec9)' : 'linear-gradient(90deg,#ffd93d,#f7971e)'};"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;opacity:0.7;">
+                <span>🎁 ${quest.reward}🪙 + ${quest.reward} XP</span>
+                ${btnHtml}
+            </div>
+        `;
+        return div;
+    }
+    
+    // ===== ПЕРЕХВАТ СОБЫТИЙ =====
+    (function() {
+        let origVictory = window.victory;
+        window.victory = function() {
+            if (origVictory) origVictory();
+            if (game && game.en) {
+                updateQuestProgress('kill', 1);
+                if (game.en.b) updateQuestProgress('boss', 1);
+                updateQuestProgress('battle', 1);
+                updateQuestProgress('coins', game.en.r || 0);
+                let xpGain = 10 + (game.en.h || 0) * 0.05;
+                if (game.en.b) xpGain = xpGain * 2;
+                addPassXP(Math.floor(xpGain));
+                initQuests();
+            }
+        };
+    })();
+    
+    // ===== ДОБАВЛЯЕМ КНОПКИ В МЕНЮ =====
+    document.addEventListener('DOMContentLoaded', function() {
+        let menu = document.getElementById('menu');
+        if (menu) {
+            // Кнопка Game Pass
+            let passBtn = document.createElement('button');
+            passBtn.className = 'gold';
+            passBtn.textContent = '🎖️ Game Pass';
+            passBtn.onclick = showGamePass;
+            menu.appendChild(passBtn);
+            
+            // Кнопка Квесты
+            let questBtn = document.createElement('button');
+            questBtn.className = 'p';
+            questBtn.textContent = '📋 Квесты';
+            questBtn.onclick = showQuests;
+            menu.appendChild(questBtn);
+            
+            console.log('✅ Кнопки Game Pass и Квесты добавлены!');
+        }
+        initQuests();
+        updateQuestsUI();
+    });
+    
+    console.log('🎖️ Game Pass 1000 уровней загружен!');
+    console.log('📋 Система квестов загружена!');
+    console.log('🎯 Новые игроки получают 10 уровень!');
+})();
+</script></body>
 </html>
