@@ -1069,5 +1069,235 @@ setInterval(function() {
     console.log('📋 Система квестов загружена!');
     console.log('🎯 Новые игроки получают 10 уровень!');
 })();
-</script></body>
+</script>// ============================================
+//  КВЕСТЫ ДЛЯ GAME PASS (ИСПРАВЛЕННЫЕ)
+//  ЗАМЕНИ ЭТУ ЧАСТЬ
+// ============================================
+
+if (!game.gamePassQuests) {
+    game.gamePassQuests = {
+        daily: [],
+        weekly: [],
+        lastReset: Date.now()
+    };
+}
+
+function generateDailyQuests() {
+    return [
+        { id: 'd1', name: 'Убить 5 боссов', target: 5, reward: 50, icon: '⚔️', type: 'kill', progress: 0, done: false, claimed: false },
+        { id: 'd2', name: 'Заработать 200 монет', target: 200, reward: 30, icon: '🪙', type: 'coins', progress: 0, done: false, claimed: false },
+        { id: 'd3', name: 'Провести 3 боя', target: 3, reward: 40, icon: '⚔️', type: 'battle', progress: 0, done: false, claimed: false },
+        { id: 'd4', name: 'Убить 1 босса', target: 1, reward: 25, icon: '👑', type: 'boss', progress: 0, done: false, claimed: false }
+    ];
+}
+
+function generateWeeklyQuests() {
+    return [
+        { id: 'w1', name: 'Убить 50 боссов', target: 50, reward: 200, icon: '⚔️', type: 'kill', progress: 0, done: false, claimed: false },
+        { id: 'w2', name: 'Заработать 2000 монет', target: 2000, reward: 150, icon: '🪙', type: 'coins', progress: 0, done: false, claimed: false },
+        { id: 'w3', name: 'Провести 20 боёв', target: 20, reward: 180, icon: '⚔️', type: 'battle', progress: 0, done: false, claimed: false },
+        { id: 'w4', name: 'Убить 10 боссов', target: 10, reward: 120, icon: '👑', type: 'boss', progress: 0, done: false, claimed: false }
+    ];
+}
+
+function initQuests() {
+    let now = Date.now();
+    let dayDiff = Math.floor((now - (game.gamePassQuests.lastReset || 0)) / (24 * 3600000));
+    
+    if (dayDiff >= 1 || !game.gamePassQuests.daily || game.gamePassQuests.daily.length === 0) {
+        game.gamePassQuests.daily = generateDailyQuests();
+        game.gamePassQuests.lastReset = now;
+        addLog('📋 Ежедневные квесты обновлены!');
+    }
+    if (dayDiff >= 7 || !game.gamePassQuests.weekly || game.gamePassQuests.weekly.length === 0) {
+        game.gamePassQuests.weekly = generateWeeklyQuests();
+        addLog('📋 Еженедельные квесты обновлены!');
+    }
+    save();
+}
+
+function updateQuestProgress(type, amount) {
+    if (!game.gamePassQuests) return;
+    
+    // Обновляем ежедневные квесты
+    if (game.gamePassQuests.daily) {
+        game.gamePassQuests.daily.forEach(q => {
+            if (!q.done && q.type === type) {
+                q.progress = (q.progress || 0) + amount;
+                if (q.progress >= q.target) {
+                    q.done = true;
+                    addLog('✅ Квест выполнен: ' + q.icon + ' ' + q.name + '!');
+                }
+            }
+        });
+    }
+    
+    // Обновляем еженедельные квесты
+    if (game.gamePassQuests.weekly) {
+        game.gamePassQuests.weekly.forEach(q => {
+            if (!q.done && q.type === type) {
+                q.progress = (q.progress || 0) + amount;
+                if (q.progress >= q.target) {
+                    q.done = true;
+                    addLog('✅ Еженедельный квест выполнен: ' + q.icon + ' ' + q.name + '!');
+                }
+            }
+        });
+    }
+    
+    save();
+    updateQuestsUI();
+}
+
+function claimQuestReward(id) {
+    // Ищем квест в ежедневных
+    let quest = null;
+    let questType = 'daily';
+    
+    if (game.gamePassQuests.daily) {
+        let found = game.gamePassQuests.daily.find(q => q.id === id);
+        if (found) { quest = found; questType = 'daily'; }
+    }
+    
+    if (!quest && game.gamePassQuests.weekly) {
+        let found = game.gamePassQuests.weekly.find(q => q.id === id);
+        if (found) { quest = found; questType = 'weekly'; }
+    }
+    
+    if (!quest) {
+        alert('❌ Квест не найден!');
+        return;
+    }
+    
+    if (!quest.done) {
+        alert('📋 Квест ещё не выполнен!');
+        return;
+    }
+    
+    if (quest.claimed) {
+        alert('✅ Награда уже получена!');
+        return;
+    }
+    
+    // Начисляем награду
+    game.p.c += quest.reward;
+    addPassXP(quest.reward);
+    quest.claimed = true;
+    
+    addLog('🎁 Награда за квест: +' + quest.reward + '🪙 +' + quest.reward + ' XP');
+    alert('🎁 Получено: ' + quest.reward + '🪙 и ' + quest.reward + ' XP');
+    
+    save();
+    updateQuestsUI();
+    updateUI();
+}
+
+function showQuests() {
+    if (typeof backToMenu === 'function') backToMenu();
+    let questDiv = document.getElementById('questsPanel');
+    if (!questDiv) {
+        let app = document.getElementById('app');
+        let newDiv = document.createElement('div');
+        newDiv.id = 'questsPanel';
+        newDiv.style.display = 'none';
+        newDiv.innerHTML = `
+            <h2>📋 Квесты Game Pass</h2>
+            <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin:10px 0;font-size:13px;">
+                <div style="display:flex;justify-content:space-between;">
+                    <span>📅 Ежедневные: <span id="dailyCount">0</span>/4</span>
+                    <span>📅 Еженедельные: <span id="weeklyCount">0</span>/4</span>
+                </div>
+            </div>
+            <div id="questsList" style="max-height:400px;overflow-y:auto;"></div>
+            <button class="back" onclick="backToMenu()">🔙 Назад</button>
+        `;
+        app.appendChild(newDiv);
+        questDiv = document.getElementById('questsPanel');
+    }
+    questDiv.style.display = 'block';
+    updateQuestsUI();
+}
+
+function updateQuestsUI() {
+    let container = document.getElementById('questsList');
+    if (!container) return;
+    container.innerHTML = '';
+    let dailyDone = 0, weeklyDone = 0;
+    
+    // Ежедневные квесты
+    if (game.gamePassQuests.daily) {
+        let title = document.createElement('div');
+        title.style.cssText = 'font-weight:bold;color:#ffd93d;margin:10px 0 5px 0;font-size:14px;';
+        title.textContent = '📅 Ежедневные квесты';
+        container.appendChild(title);
+        game.gamePassQuests.daily.forEach(q => {
+            dailyDone += q.done ? 1 : 0;
+            container.appendChild(createQuestElement(q));
+        });
+    }
+    
+    // Еженедельные квесты
+    if (game.gamePassQuests.weekly) {
+        let title = document.createElement('div');
+        title.style.cssText = 'font-weight:bold;color:#ffd93d;margin:15px 0 5px 0;font-size:14px;';
+        title.textContent = '📅 Еженедельные квесты';
+        container.appendChild(title);
+        game.gamePassQuests.weekly.forEach(q => {
+            weeklyDone += q.done ? 1 : 0;
+            container.appendChild(createQuestElement(q));
+        });
+    }
+    
+    document.getElementById('dailyCount').textContent = dailyDone;
+    document.getElementById('weeklyCount').textContent = weeklyDone;
+}
+
+function createQuestElement(quest) {
+    let div = document.createElement('div');
+    let progress = Math.min(100, (quest.progress / quest.target) * 100);
+    let isDone = quest.done;
+    let isClaimed = quest.claimed;
+    
+    div.style.cssText = `
+        background: ${isClaimed ? 'rgba(100,100,100,0.1)' : isDone ? 'rgba(0,184,148,0.1)' : 'rgba(255,255,255,0.03)'};
+        border: ${isClaimed ? '1px solid #555' : isDone ? '1px solid #00b894' : '1px solid transparent'};
+        border-radius: 6px;
+        padding: 8px 10px;
+        margin: 4px 0;
+        opacity: ${isClaimed ? 0.5 : 1};
+    `;
+    
+    let statusText = '';
+    let btnHtml = '';
+    
+    if (isClaimed) {
+        statusText = '✅ Получено';
+    } else if (isDone) {
+        statusText = '🎁 Готово!';
+        btnHtml = `<button class="gold" onclick="claimQuestReward('${quest.id}')" style="margin-top:4px;padding:4px 10px;font-size:11px;background:linear-gradient(45deg,#f7971e,#ffd200);color:#000;">🎁 Забрать</button>`;
+    } else {
+        statusText = `📊 ${quest.progress}/${quest.target}`;
+    }
+    
+    div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <span style="font-size:16px;">${quest.icon}</span>
+                <span style="font-weight:bold;font-size:13px;">${quest.name}</span>
+            </div>
+            <div style="font-size:12px;color:${isClaimed ? '#666' : isDone ? '#51cf66' : '#ffd93d'};">
+                ${statusText}
+            </div>
+        </div>
+        <div class="hp" style="margin:4px 0;">
+            <div class="hpf" style="width:${progress}%;background:${isClaimed ? 'linear-gradient(90deg,#555,#777)' : isDone ? 'linear-gradient(90deg,#00b894,#00cec9)' : 'linear-gradient(90deg,#ffd93d,#f7971e)'};"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;opacity:0.7;">
+            <span>🎁 ${quest.reward}🪙 + ${quest.reward} XP</span>
+            ${btnHtml}
+        </div>
+    `;
+    
+    return div;
+}</body>
 </html>
